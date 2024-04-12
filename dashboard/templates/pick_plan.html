@@ -1,0 +1,121 @@
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/pick_plan.css' %}">
+
+
+    <table class="data-table" onload="fetchData();">
+        <thead class="t-heading">
+            <tr class="head-row">
+                <th class="table-header">Schedule Time</th>
+                <th class="table-header">VC Number</th>
+                <th class="table-header">ASN Number</th>
+                <th class="table-header">Model Description</th>
+                <th class="table-header">Plan Date</th>
+            </tr>
+        </thead>
+        <tbody id="data-body">
+            {% for entry in combined_data %}
+            <tr class="table-row" onclick="openCameraContainer('{{ entry.id }}', '{{entry.asn_number}}','{{entry.model}}')">
+                <!-- <tr class="table-row" data-item-id="{{ entry.id }}" onclick="opencamera(z)" > -->
+                <td class="table-cell">{{ entry.schedule_time }}</td>
+                <td class="table-cell vc-number ">{{ entry.vc_number }}</td>
+                <td class="table-cell">{{ entry.asn_number }}</td>
+                <td class="table-cell">{{ entry.model }}</td>
+                <td class="table-cell">{{ entry.plan_date }}</td>
+            </tr>
+            {% endfor %}
+            {% if combined_data|length == 0 %}
+            <tr>
+                <td colspan="3" class="table-cell">No data found</td>
+            </tr>
+            {% endif %}
+            <!-- Data will be dynamically loaded here -->
+        </tbody>
+    </table>
+
+
+    <div id="camera-container" sclass="camera-container" style="display: none; position: absolute; top: 0; left: 50%; transform: translateX(-50%); background-color: aliceblue; padding: 10px; ">
+        <div class="row-detail">
+            <h3 id="asn" ></h3>
+            <h3 id="model"></h3>
+        </div>
+        <video id="camera-stream" autoplay playsinline style="width: 320px; height: 240px;"></video>
+        <canvas id="canvas" width="320" height="240" style="display: none;"></canvas>
+    
+        <div id="qr-result"></div>
+        <div id="qr-box"></div> <!-- Added div for drawing the box around QR code -->
+    
+        <!-- Add buttons for OK and Cancel -->
+        <div id="button-container" style="display: none;">
+            <button id="btn-ok">OK</button>
+            <button id="btn-cancel" onclick="handleCancelButtonClick()">Cancel</button>
+        </div>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script src="{% static 'js/qr_scanner.js' %}"></script>
+    <script>
+        function fetchData() {
+            $.ajax({
+                url: '/get_combined_data/',  // URL to your Django view
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    $('#data-body').empty();  // Clear existing data
+                    if (data.combined_data.length > 0) {
+                        $.each(data.combined_data, function(index, entry) {
+                            $('#data-body').append('<tr class="table-row"><td class="table-cell">' + entry.vc_number + '</td><td class="table-cell">' + entry.asn_number + '</td><td class="table-cell">' + entry.model + '</td></tr>');
+                        });
+                    } else {
+                        $('#data-body').append('<tr class="table-row"><td colspan="3" class="table-cell">No data found</td></tr>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error(xhr.responseText);
+                }
+            });
+        }
+
+        // Refresh data every 10 seconds
+        // setInterval(fetchData, 1000);
+
+        document.querySelectorAll('.table-row').forEach(row => {
+    row.addEventListener('click', function() {
+        // Extract VC number from the clicked row
+        const vcNumber = row.querySelector('.vc-number').innerText;
+        console.log('Clicked VC number:', vcNumber);
+
+        // Create a FormData object and append the VC number
+        const formData = new FormData();
+        formData.append('vc_number', vcNumber);
+
+        // Send a POST request to the backend
+        fetch('/getPayloadData/', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Backend response:', data);
+            // Proceed with further actions based on the response
+        })
+        .catch(error => {
+            console.error('Error sending VC number:', error);
+        });
+    });
+});
+
+       
+    </script>
+</div>
+
+{% endblock %}

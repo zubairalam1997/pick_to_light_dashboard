@@ -1,0 +1,54 @@
+/* Styling for the data table */
+.data-table {
+    
+    width: 100vw ; /* Set the table width */
+    margin: 0 ;
+    padding: 0; /* Center the table horizontally */
+    border-collapse: collapse;
+    border: 2px solid #ccc; /* Add border to the table */
+}
+
+/* Styling for table header */
+.t-heading {
+    background-color: #f2f2f2;
+}
+
+.t-heading .table-header {
+    padding: 10px;
+    border-bottom: 2px solid #ccc; /* Add border to table header */
+}
+
+/* Styling for table rows */
+.table-row:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+/* CSS for hovering effect on table rows */
+.table-row:hover {
+    background-color: lightgray; /* Change background color on hover */
+    cursor: pointer; /* Change cursor to pointer on hover */
+}
+
+/* Styling for table cells */
+.table-cell {
+    padding: 10px;
+    border: 1px solid #000; /* Add border to table cells */
+}
+
+#camera-container {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999; /* Adjust z-index as needed */
+    background-color: white; /* Set background color */
+    padding: 20px; /* Adjust padding as needed */
+    border: 1px solid #ccc; /* Add border for better visibility */
+}
+
+
+/* Optional: Style for buttons */
+#button-container button {
+    margin: 5px;
+}

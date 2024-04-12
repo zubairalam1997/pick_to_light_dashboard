@@ -1,0 +1,45 @@
+{%load static%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TCF-1A: Kitting Zone</title>
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+
+</head>
+<body>
+    <header class="header">
+        <div class="top-head">
+            <div class="configuraton-tag">
+                <span><a href="*">Asn Sequence</a></span>
+                <span><a href="*">kitting configuration</a></span>
+            </div>
+            <div class="zone-name">
+                <h2>TCF-1A: Kitting Zone</h2>
+            </div>
+            <div class="search-bar">
+                <form action="*" method="post">
+                    {% csrf_token %}
+                    <input class="input" type="text" name="vc_number" placeholder="enetr vc number">
+                    <button type="submit">Submit</button>
+                </form>
+            </div>
+            <div class="tata-logo">
+                <h3>Tata Motors</h3>
+            </div>
+        </div> 
+        
+    </header>
+    <div  class="route-list-items">
+        <ul>
+            <li class="list-item">Kitting Plan</li>
+            <li class="list-item"><a href="*" > Kitting In Process</a></li>
+            <li class="list-item"><a href="*" >Completed Kittings</a></li>
+        </ul>
+    </div>
+    {% block content %}
+    {% endblock %}
+
+</body>
+</html>

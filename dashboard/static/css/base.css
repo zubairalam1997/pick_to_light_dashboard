@@ -1,0 +1,91 @@
+/* base.css */
+
+body, h1, h2, h3, h4, h5, h6, p, ul, li, form, input, button, a {
+    margin: 0;
+    padding: 0;
+    text-decoration: none; /* Remove default underline */
+    
+}
+a{
+    color: #fff;
+}
+/* Styling header */
+.header {
+    background-color: rgb(9, 45, 137);
+    color: #fff;
+    padding: 20px;
+}
+
+/* Styling top header section */
+.top-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Styling configuration tags */
+.configuraton-tag {
+    display: flex;
+}
+
+.configuraton-tag span {
+    margin-right: 10px;
+}
+
+/* Styling zone name */
+.zone-name h3 {
+    margin-bottom: 10px;
+}
+
+/* Styling search bar */
+.search-bar {
+    display: flex;
+    margin-top: 5px; /* Add space between zone name and search bar */
+}
+
+.search-bar .input {
+    padding: 5px;
+    margin-right: 10px;
+    border-radius: 5px; /* Add border radius */
+    border: 1px solid #ccc; /* Add border for better visibility */
+}
+
+.search-bar button {
+    padding: 5px 10px;
+    background-color: #fff;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px; /* Add border radius */
+    border: 1px solid #ccc; /* Add border for better visibility */
+}
+
+
+/* Styling Tata Motors logo */
+.tata-logo h3 {
+    font-size: 24px;
+}
+
+/* Styling route list items */
+.route-list-items ul {
+    list-style-type: none;
+    display: flex;
+    justify-content: space-around;
+    background: gray;
+    padding: 5px;
+    align-items: center;
+}
+
+.route-list-items li {
+    margin-bottom: 10px;
+    padding-top: 5px;
+}
+
+.route-list-items li a {
+    text-decoration: none;
+    color: #000;
+}
+
+.route-list-items li a:hover {
+    background: #000;
+    color: #fff;
+}
