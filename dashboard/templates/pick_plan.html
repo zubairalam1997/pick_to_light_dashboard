@@ -68,7 +68,7 @@
                     $('#data-body').empty();  // Clear existing data
                     if (data.combined_data.length > 0) {
                         $.each(data.combined_data, function(index, entry) {
-                            $('#data-body').append('<tr class="table-row"><td class="table-cell">' + entry.vc_number + '</td><td class="table-cell">' + entry.asn_number + '</td><td class="table-cell">' + entry.model + '</td></tr>');
+                            $('#data-body').append('<tr class="table-row"><td class="table-cell">' + entry.vc_number + '</td><td class="table-cell">' + entry.asn_number + '</td><td class="table-cell">' + entry.model + '</td> <td class="table-cell trolley" id="trolley-{{ item.id }}"> '+entry.trolley_qr+'</td></tr>');
                         });
                     } else {
                         $('#data-body').append('<tr class="table-row"><td colspan="3" class="table-cell">No data found</td></tr>');
@@ -91,6 +91,7 @@
 
         // Create a FormData object and append the VC number
         const formData = new FormData();
+        
         formData.append('vc_number', vcNumber);
 
         // Send a POST request to the backend
@@ -113,6 +114,7 @@
         });
     });
 });
+
 
        
     </script>

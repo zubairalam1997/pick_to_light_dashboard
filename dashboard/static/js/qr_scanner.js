@@ -1,10 +1,11 @@
-function openCamera(itemId , vcNumber,asnNumber, modelDescription) {
+function openCamera(itemId ) {
     const videoElement = document.getElementById('camera-stream');
     const cameraContainer = document.getElementById('camera-container');
     const buttonContainer = document.getElementById('button-container');
     const btnOk = document.getElementById('btn-ok');
     const btnCancel = document.getElementById('btn-cancel');
     const qrResultDiv = document.getElementById('qr-result'); // Get QR result div
+    const trolleyCellId = 'trolley-' + itemId;
     
     // Clear QR result div when opening camera for a new row
     qrResultDiv.innerText = '';
@@ -58,9 +59,37 @@ function openCamera(itemId , vcNumber,asnNumber, modelDescription) {
                 clearInterval(intervalId);
 
                 document.getElementById('qr-result').innerText = code.data; // Display QR code data on the page
+                // Display QR code data in the table
+    document.getElementById(trolleyCellId).innerHTML = code.data;
+    console.log(itemId, "item id catched");
+                
             }
         }, 1000);
     });
+}
+function sendDataToServer(qrData , itemId) {
+    // Make an AJAX request to your Django backend
+    $.ajax({
+        url: '/getPayloadData/',
+        type: 'POST',
+        data: {
+            qr_data: qrData,
+            id: itemId
+        },
+        success: function(response) {
+            // Handle successful response from the server
+            console.log('Server response:', response);
+        },
+        error: function(xhr, status, error) {
+            // Handle error
+            console.error('Error:', error);
+        }
+    });
+}
+// Function to retrieve CSRF token from cookies
+function getCookie(name) {
+    const cookieValue = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+    return cookieValue ? cookieValue.pop() : '';
 }
 
 function openCameraContainer(itemId , asnNumber , modelDescription) {
@@ -71,6 +100,16 @@ function openCameraContainer(itemId , asnNumber , modelDescription) {
     
     // Call the function to open the camera stream
     openCamera(itemId);
+}
+
+function handleOkButtonClick( itemId ){
+    const qrResult = document.getElementById('qr-result').innerText;
+    if (qrResult) {
+        // QR code detected, post data
+        sendDataToServer(qrResult, itemId);
+    } else {
+        alert('No QR code detected. Please try again.');
+    }
 }
 
 function handleCancelButtonClick() {
