@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/pick_plan.css' %}">
+<link rel="stylesheet" href="{% static 'css/modal.css' %}">
+
+<table class="data-table">
+    <thead class="t-heading">
+        <tr class="head-row">
+            <th class="table-header">ASN Number</th>
+            <th class="table-header">VC Number</th>
+            <th class="table-header">Model Description</th>
+            <th class="table-header">Start Time</th>
+        </tr>
+    </thead>
+    <tbody id="data-body">
+        {% for entry in kitting_in_process_data %}
+        <tr class="table-row" onclick="openModal('{{ entry.asn_no }}')">
+            <td class="table-cell asn-number">{{ entry.asn_no }}</td>
+            <td class="table-cell vc-number">{{ entry.vc_no }}</td>
+            <td class="table-cell">{{ entry.model }}</td>
+            <td class="table-cell">{{ entry.start_time }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Modal -->
+<div id="myModal" class="modal">
+    {% include 'modal.html' %}
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script src="{% static 'js/qr_scanner.js' %}"></script>
+<script>
+document.querySelectorAll('.table-row').forEach(row => {
+    row.addEventListener('click', function() {
+        // Extract ASN number from the clicked row
+        const asnNumber = row.querySelector('.asn-number').innerText;
+        console.log('Clicked ASN number:', asnNumber);
+
+        // Send ASN number to backend view to retrieve modal data
+        sendASNToBackend(asnNumber);
+    });
+});
+
+// Function to send ASN number to backend view
+function sendASNToBackend(asnNumber) {
+    const formData = new FormData();
+    formData.append('asn_number', asnNumber);
+
+    fetch('/open_modal/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Backend response:', data);
+        // Populate the modal with received data
+        populateModal(data);
+    })
+    .catch(error => {
+        console.error('Error sending ASN number:', error);
+    });
+}
+
+// Function to populate the modal with data
+function populateModal(data) {
+    const formData = new FormData();
+    formData.append('open_modal_data', JSON.stringify(data));
+
+    fetch('/render_modal/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.text();
+    })
+    .then(htmlContent => {
+        // Replace the content of the modal with the fetched HTML content
+        const modalBody = document.getElementById('modal-data-body');
+        modalBody.innerHTML = htmlContent;
+
+        // Show the modal
+        openModal();
+    })
+    .catch(error => {
+        console.error('Error populating modal:', error);
+    });
+}
+
+
+// Function to get CSRF token from cookies
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Check if cookie name matches the CSRF token cookie name
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Get the modal element
+const modal = document.getElementById('myModal');
+
+// Function to open the modal
+function openModal() {
+    modal.style.display = 'block';
+     // Center the modal
+    modal.style.top = "0%";
+    modal.style.left = "25%";
+    modal.style.zIndex = 10;
+
+   
+}
+
+
+</script>
+
+{% endblock %}

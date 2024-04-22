@@ -1,0 +1,46 @@
+<!-- modal_content.html -->
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/modal.css' %}">
+<div class="modal-content">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <table class="modal-table">
+        <thead class="t-heading" style="display: none;">
+            <tr class="head-row">
+                <th class="table-header">Part Number</th>
+                <th class="table-header">Part Description</th>
+                <th class="table-header">Quantity</th>
+                <th class="table-header">Status</th>
+            </tr>
+        </thead>
+        <tbody id="modal-data-body">
+            {% for item in open_modal_data %}
+            <tr class="table-row" >
+                <!-- <tr class="table-row" data-item-id="{{ entry.id }}" onclick="opencamera(z)" > -->
+                
+                <td class="table-cell">{{ item.partno }}</td>
+                <td class="table-cell">{{ item.partdesc }}</td>
+                <td class="table-cell">{{ item.qty }}</td>
+                <td class="table-cell">{{ item.status }}</td>
+            </tr>
+            {% endfor %}
+            <!-- Data of clicked row will be dynamically loaded here -->
+        </tbody>
+    </table>
+</div>
+<script>
+    var closeBtn = document.querySelectorAll("close")[0];
+
+// Function to close the modal
+function closeModal() {
+  modal.style.display = "none";
+}
+
+
+
+// Close modal on clicking outside (using event delegation)
+window.addEventListener('click', function(event) {
+  if (event.target === modal) { // Check if clicked outside the modal
+    closeModal();
+  }
+});
+</script>

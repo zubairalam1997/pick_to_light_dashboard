@@ -48,6 +48,10 @@ class VcMaster(models.Model):
 
     
 class WorkTable(models.Model):
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+    )
     id = models.BigAutoField(primary_key=True)
     tagid = models.CharField(max_length=50, blank=True, null=True)
     tagcode = models.CharField(max_length=50, blank=True, null=True)
@@ -64,7 +68,7 @@ class WorkTable(models.Model):
     seq = models.IntegerField(blank=True, null=True)
     rw = models.IntegerField(blank=True, null=True)
     clan = models.IntegerField(blank=True, null=True)
-    statuss = models.IntegerField(blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     tror = models.CharField(max_length=50, blank=True, null=True)
     mint = models.IntegerField(blank=True, null=True)
     maxi = models.IntegerField(blank=True, null=True)

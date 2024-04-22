@@ -33,9 +33,9 @@
     </header>
     <div  class="route-list-items">
         <ul>
-            <li class="list-item">Kitting Plan</li>
-            <li class="list-item"><a href="*" > Kitting In Process</a></li>
-            <li class="list-item"><a href="*" >Completed Kittings</a></li>
+            <li class="list-item"><a href="{% url 'picking_plan' %}" >Kitting Plan </a></li>
+            <li class="list-item"><a href="{% url 'kitting_in_process' %}" > Kitting In Process</a></li>
+            <li class="list-item"><a href="{% url 'completed_kittings' %}" >Completed Kittings</a></li>
         </ul>
     </div>
     {% block content %}

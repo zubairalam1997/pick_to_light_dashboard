@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/pick_plan.css' %}">
+<link rel="stylesheet" href="{% static 'css/modal.css' %}">
+
+<table class="data-table">
+    <thead class="t-heading">
+        <tr class="head-row">
+            <th class="table-header">ASN Number</th>
+            <th class="table-header">VC Number</th>
+            <th class="table-header">Model Description</th>
+            <th class="table-header">Start Time</th>
+        </tr>
+    </thead>
+    <tbody id="data-body">
+        {% for entry in completed_picks %}
+        <tr class="table-row" >
+            <td class="table-cell asn-number">{{ entry.asn_no }}</td>
+            <td class="table-cell vc-number">{{ entry.vc_no }}</td>
+            <td class="table-cell">{{ entry.model }}</td>
+            <td class="table-cell">{{ entry.start_time }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

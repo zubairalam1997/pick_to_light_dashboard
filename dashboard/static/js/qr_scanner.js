@@ -1,3 +1,4 @@
+var qr_code = '';
 function openCamera(itemId ) {
     const videoElement = document.getElementById('camera-stream');
     const cameraContainer = document.getElementById('camera-container');
@@ -6,6 +7,7 @@ function openCamera(itemId ) {
     const btnCancel = document.getElementById('btn-cancel');
     const qrResultDiv = document.getElementById('qr-result'); // Get QR result div
     const trolleyCellId = 'trolley-' + itemId;
+   
     
     // Clear QR result div when opening camera for a new row
     qrResultDiv.innerText = '';
@@ -50,47 +52,51 @@ function openCamera(itemId ) {
             canvasContext.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
             const imageData = canvasContext.getImageData(0, 0, canvasElement.width, canvasElement.height);
             const code = jsQR(imageData.data, imageData.width, imageData.height);
-
+            console.log(code )
             if (code) {
                 canvasContext.strokeStyle = '#00FF00';
                 canvasContext.lineWidth = 2;
                 canvasContext.strokeRect(code.location.topLeftCorner.x, code.location.topLeftCorner.y, code.location.topRightCorner.x - code.location.topLeftCorner.x, code.location.bottomLeftCorner.y - code.location.topLeftCorner.y);
 
                 clearInterval(intervalId);
+                qr_code = code.data;
 
                 document.getElementById('qr-result').innerText = code.data; // Display QR code data on the page
-                // Display QR code data in the table
-    document.getElementById(trolleyCellId).innerHTML = code.data;
-    console.log(itemId, "item id catched");
-                
+               
+                // Send code.data to your Django backend
+            sendDataToServer(qr_code ,true);
+            handleOkButtonClick();
+            
             }
         }, 1000);
     });
 }
-function sendDataToServer(qrData , itemId) {
-    // Make an AJAX request to your Django backend
-    $.ajax({
-        url: '/getPayloadData/',
+
+function sendDataToServer(data, shouldSendRequest = true) {
+
+    const xhr = $.ajax({
+        url: '/getPayloadData/',  // URL to your Django view
         type: 'POST',
         data: {
-            qr_data: qrData,
-            id: itemId
+            qr_data: data
         },
         success: function(response) {
-            // Handle successful response from the server
             console.log('Server response:', response);
         },
         error: function(xhr, status, error) {
-            // Handle error
             console.error('Error:', error);
         }
     });
+    console.log('Data:', data);
+    const btnCancel = document.getElementById('btn-cancel');
+    btnCancel.addEventListener('click', function() {
+      xhr.abort(); // Abort the request on cancel button click
+      console.log('AJAX request aborted.');
+      return ('' ,  false)
+    });
+    
 }
-// Function to retrieve CSRF token from cookies
-function getCookie(name) {
-    const cookieValue = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
-    return cookieValue ? cookieValue.pop() : '';
-}
+
 
 function openCameraContainer(itemId , asnNumber , modelDescription) {
     // Show the camera container
@@ -102,14 +108,21 @@ function openCameraContainer(itemId , asnNumber , modelDescription) {
     openCamera(itemId);
 }
 
-function handleOkButtonClick( itemId ){
-    const qrResult = document.getElementById('qr-result').innerText;
-    if (qrResult) {
-        // QR code detected, post data
-        sendDataToServer(qrResult, itemId);
-    } else {
-        alert('No QR code detected. Please try again.');
-    }
+function handleOkButtonClick(){
+    const videoElement = document.getElementById('camera-stream');
+    const row_info = document.getElementById('camera-container');
+
+    // Hide button container
+    document.getElementById('button-container').style.display = 'none';
+
+    // Stop video stream
+    const streamTracks = videoElement.srcObject.getTracks();
+    streamTracks.forEach(track => track.stop());
+    row_info.style.display = 'none';
+
+    // Remove video element from display
+    videoElement.style.display = 'none';
+    row_info.style.display = 'none';
 }
 
 function handleCancelButtonClick() {
@@ -131,4 +144,6 @@ function handleCancelButtonClick() {
      // Remove video element from display
      videoElement.style.display = 'none';
      cameraContainer.style.display = 'none';
+     // Do not send the request when canceling
+    sendDataToServer('', false);
 }
