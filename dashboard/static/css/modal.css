@@ -2,39 +2,35 @@
 .modal {
     display: none;
     position: fixed;
-    top: 5;
-    left: 25%;
-    z-index: 10;
+    top: 15%;
+    left: 20%;
+    z-index: 1000;
     margin: 0;
     padding: 0;
-    width: 50%;
+    width: 70%;
     overflow: auto;
-    background-color: rgba(0, 0, 0, 0.4);
+    background-color: rgba(28, 86, 245, 0.4);
 }
 
 .modal-content {
     background-color: #fefefe;
-    margin: 15% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width:85%;
-    height:100%;
+
 }
 
 .close {
     position: absolute;
     right: 20px;
-    top: 10px;
+    top: 2px;
     font-size: 28px;
-    font-weight: bold;
+    font-weight: 1000;
     color: #aaa;
     cursor: pointer;
-    color: red;
+    color: rgb(247, 23, 23);
 }
 
 .close:hover,
 .close:focus {
-    color: black;
+    color: rgb(237, 4, 4);
     text-decoration: none;
     cursor: pointer;
 }
@@ -52,6 +48,12 @@
     padding: 8px;
 }
 
-.modal-table th {
-    background-color: #f2f2f2;
-}
+
+.modal-content table tbody td{
+    padding: 5px 10px;
+    border:none;
+  }
+
+
+
+  

@@ -18,26 +18,33 @@
             <div class="zone-name">
                 <h2>TCF-1A: Kitting Zone</h2>
             </div>
-            <div class="search-bar">
+            <!-- <div class="search-bar">
                 <form action="*" method="post">
                     {% csrf_token %}
                     <input class="input" type="text" name="vc_number" placeholder="enetr vc number">
                     <button type="submit">Submit</button>
                 </form>
-            </div>
+            </div> -->
             <div class="tata-logo">
                 <h3>Tata Motors</h3>
             </div>
         </div> 
         
     </header>
-    <div  class="route-list-items">
+    <div class="list-items">
         <ul>
-            <li class="list-item"><a href="{% url 'picking_plan' %}" >Kitting Plan </a></li>
-            <li class="list-item"><a href="{% url 'kitting_in_process' %}" > Kitting In Process</a></li>
-            <li class="list-item"><a href="{% url 'completed_kittings' %}" >Completed Kittings</a></li>
+            <li class="list-item{% if request.path == '/' %} active{% endif %}">
+                <a href="{% url 'picking_plan' %}">Kitting Plan</a>
+            </li>
+            <li class="list-item{% if request.path == '/kitting_in_process/' %} active{% endif %}">
+                <a href="{% url 'kitting_in_process' %}">Kitting In Process</a>
+            </li>
+            <li class="list-item{% if request.path == '/completed_kittings/' %} active{% endif %}">
+                <a href="{% url 'completed_kittings' %}">Completed Kittings</a>
+            </li>
         </ul>
     </div>
+    
     {% block content %}
     {% endblock %}
 

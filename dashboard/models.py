@@ -1,6 +1,10 @@
 from django.db import models
 
 class AsnSchedule(models.Model):
+    STATUS_CHOICES = (
+        ('processing', 'Processing...'),
+        ('completed', 'Completed'),
+    )
     master_id = models.AutoField(primary_key=True)
     asn_no = models.CharField(max_length=50, blank=True, null=True)
     side = models.CharField(max_length=5, blank=True, null=True)
@@ -8,13 +12,13 @@ class AsnSchedule(models.Model):
     vc_no = models.CharField(max_length=50, blank=True, null=True)
     seq_no = models.CharField(max_length=50, blank=True, null=True)
     datetime = models.DateTimeField(blank=True, null=True)
-    selection_status = models.IntegerField(blank=True, null=True)
+    selection_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending...')
     start_time = models.DateTimeField(blank=True, null=True)
     end_time = models.DateTimeField(blank=True, null=True)
     duration = models.IntegerField(blank=True, null=True)
     color = models.CharField(max_length=50, blank=True, null=True)
     prod_date = models.DateTimeField(blank=True, null=True)
-    trar = models.CharField(max_length=50, blank=True, null=True)
+    trqr = models.CharField(max_length=50, blank=True, null=True)
 
     
 class EslPart(models.Model):
@@ -90,3 +94,13 @@ class vc_n_asn(models.Model):
     schedule_date_time   = models.DateTimeField(max_length=100 , blank=True ,null=True)
     vcn = models.CharField(max_length=50, blank=True, null=True)
     asnn = models.CharField(max_length=100, blank=True, null=True)
+
+class trolley_data(models.Model):
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+    )
+    mac = models.CharField(max_length=50, blank=True, null=True)
+    trolley_code = models.CharField( max_length=25,blank=True, null= True)
+    color = models.CharField(max_length=50, blank=True, null=True)
+    trolley_picking_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='completed')

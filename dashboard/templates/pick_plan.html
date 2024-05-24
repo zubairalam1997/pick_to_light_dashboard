@@ -17,7 +17,7 @@
             </tr>
         </thead>
         <tbody id="data-body">
-            {% for entry in combined_data %}
+            {% for entry in page %}
             <tr class="table-row" onclick="openCameraContainer('{{ entry.id }}', '{{entry.asn_number}}','{{entry.model}}')">
                 <!-- <tr class="table-row" data-item-id="{{ entry.id }}" onclick="opencamera(z)" > -->
                 <td class="table-cell">{{ entry.schedule_time }}</td>
@@ -26,8 +26,11 @@
                 <td class="table-cell">{{ entry.model }}</td>
                 <td class="table-cell">{{ entry.plan_date }}</td>
             </tr>
-            {% endfor %}
-            {% if combined_data|length == 0 %}
+            {% empty %}
+    <p>No data available.</p>
+{% endfor %}
+
+            {% if page|length == 0 %}
             <tr>
                 <td colspan="3" class="table-cell">No data found</td>
             </tr>
@@ -35,23 +38,47 @@
             <!-- Data will be dynamically loaded here -->
         </tbody>
     </table>
+    
+<!-- Pagination controls -->
+<div class="pagination">
+    <span class="step-links">
+        {% if page.has_previous %}
+            <a href="?page=1">&laquo; First</a>
+            <a href="?page={{ page.previous_page_number }}">Previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ page.number }} of {{ page.paginator.num_pages }}.
+        </span>
+
+        {% if page.has_next %}
+            <a href="?page={{ page.next_page_number }}">Next</a>
+            <a href="?page={{ page.paginator.num_pages }}">Last &raquo;</a>
+        {% endif %}
+    </span>
+</div>
 
 
     <div id="camera-container" sclass="camera-container" style="display: none; position: absolute; top: 0; left: 50%; transform: translateX(-50%); background-color: aliceblue; padding: 10px; ">
+        <div class="scan-msg"><h3 style="color: blue;">Place the Trolley Qr code in front of Camera </h3></div>
         <div class="row-detail">
             <h3 id="asn" ></h3>
             <h3 id="model"></h3>
         </div>
-        <video id="camera-stream" autoplay playsinline style="width: 320px; height: 240px;"></video>
+        <video id="camera-stream" autoplay playsinline style="width: 320px; height: 240px; "></video>
         <canvas id="canvas" width="320" height="240" style="display: none;"></canvas>
     
         <div id="qr-result"></div>
         <div id="qr-box"></div> <!-- Added div for drawing the box around QR code -->
-    
+        <!-- Form to take input QR trolley number -->
+        <form method="post" id="manual_qr" style="margin-top: 5px;">
+            <label for="qr-result">Trolley Number:</label>
+            <input type="text" id="qr-result" name="trolley_number" >
+        </form>
         <!-- Add buttons for OK and Cancel -->
         <div id="button-container" style="display: none;">
-            <button id="btn-ok">OK</button>
-            <button id="btn-cancel" onclick="handleCancelButtonClick()">Cancel</button>
+            <button id="btn-ok" style="background-color: rgb(3, 180, 3); padding: 5px; border-radius: 5px; color: whitesmoke; border: 1px whitesmoke; transition: background-color 0.3s ease;" onmouseover="this.style.backgroundColor='green'" onmouseout="this.style.backgroundColor='rgb(3, 180, 3)'">OK</button>
+            <button id="btn-cancel"  onclick="handleCancelButtonClick()" style="background-color: rgb(252, 10, 10); padding: 5px; border-radius: 5px; color: whitesmoke; border: 1px whitesmoke; transition: background-color 0.3s ease;" onmouseover="this.style.backgroundColor='lightred'" onmouseout="this.style.backgroundColor='rgb(252, 10, 10)'">Cancel</button>
         </div>
     </div>
     

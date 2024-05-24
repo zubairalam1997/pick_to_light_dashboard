@@ -3,6 +3,7 @@
 <link rel="stylesheet" href="{% static 'css/modal.css' %}">
 <div class="modal-content">
     <span class="close" onclick="closeModal()">&times;</span>
+    
     <table class="modal-table">
         <thead class="t-heading" style="display: none;">
             <tr class="head-row">
@@ -14,10 +15,11 @@
         </thead>
         <tbody id="modal-data-body">
             {% for item in open_modal_data %}
-            <tr class="table-row" >
+           <tr class="table-row" style="{% if item.status == 'pending' %} background-color: rgba(244, 94, 94, 0.4); {% elif item.status == 'completed' %} background-color: rgba(48, 141, 241, 0.4); {% endif %}">
+
                 <!-- <tr class="table-row" data-item-id="{{ entry.id }}" onclick="opencamera(z)" > -->
                 
-                <td class="table-cell">{{ item.partno }}</td>
+                <td class="table-cell ">{{ item.partno }}</td>
                 <td class="table-cell">{{ item.partdesc }}</td>
                 <td class="table-cell">{{ item.qty }}</td>
                 <td class="table-cell">{{ item.status }}</td>
@@ -29,7 +31,7 @@
 </div>
 <script>
     var closeBtn = document.querySelectorAll("close")[0];
-
+    
 // Function to close the modal
 function closeModal() {
   modal.style.display = "none";
@@ -39,7 +41,7 @@ function closeModal() {
 
 // Close modal on clicking outside (using event delegation)
 window.addEventListener('click', function(event) {
-  if (event.target === modal) { // Check if clicked outside the modal
+  if (event.target !== modal) { // Check if clicked outside the modal
     closeModal();
   }
 });

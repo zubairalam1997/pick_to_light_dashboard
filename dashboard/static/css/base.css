@@ -1,6 +1,6 @@
 /* base.css */
 
-body, h1, h2, h3, h4, h5, h6, p, ul, li, form, input, button, a {
+body, h1, h2, h3, h4, h5, h6, p, form, input, button, a {
     margin: 0;
     padding: 0;
     text-decoration: none; /* Remove default underline */
@@ -65,27 +65,56 @@ a{
     font-size: 24px;
 }
 
-/* Styling route list items */
-.route-list-items ul {
-    list-style-type: none;
+.list-items{
+    display: block;
+    background: gray;
+    
+}
+/* Navigation menu styles */
+
+.list-items ul {
+    list-style-type: none; /* Remove bullet points */
+    padding: 0; /* Remove default padding */
+    margin: 0; /* Remove default margin */
     display: flex;
     justify-content: space-around;
-    background: gray;
-    padding: 5px;
     align-items: center;
+    height: 2.5rem;
+    width: 100%;
+   
 }
 
-.route-list-items li {
-    margin-bottom: 10px;
-    padding-top: 5px;
+.list-item {
+    /* Display list items inline */
+    display: inline-block; /* Display list items inline */
+    padding: 10px;
+    background: gray;
+    flex-grow: 1; /* Make list-item acquire all remaining space */
+    text-align: center; /* Center the text horizontally */
+    border: 1px solid transparent;
+    
 }
 
-.route-list-items li a {
-    text-decoration: none;
-    color: #000;
-}
-
-.route-list-items li a:hover {
-    background: #000;
+.list-item:hover,
+.list-item:active,
+.list-item:focus {
+    border: 1px solid #fff;
+    background: #3552f7; /* Add border on hover, click, and focus */
     color: #fff;
+}
+.list-item.active {
+    border: 1px solid #fff;
+    background: #3552f7;
+    color: #fff;
+}
+.list-item a {
+    text-decoration: none; /* Remove underline from links */
+    color: #000; /* White text color */
+    font-weight: 800;
+}
+
+/* CSS file */
+.list-item:hover a {
+    color: #fff;  /* Change anchor tag color to white when hovering over list item */
+    text-decoration: none;  /* Remove underline decoration */
 }
