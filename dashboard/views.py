@@ -303,7 +303,7 @@ def get_Payload_Data(request):
                                     matching_trolley.color = vc_color
                                     matching_trolley.save()
                                     trolley_payload = [{
-                                        "mac": trolley_mac, "mappingtype": 135, "styleid": 54, "qrcode": "",
+                                        "mac": trolley_mac, "mappingtype": 135, "styleid": 54, "qrcode": asn_schedule_created.trqr,
                                         "Status": "PENDING", "MODEL": asn_schedule_created.model,
                                         "VC": asn_schedule_created.vc_no, "ASN": asn_schedule_created.asn_no,
                                         "ledrgb": vc_color, "ledstate": "0", "outtime": "0"}]
@@ -418,6 +418,7 @@ def enter_key(request):
         
         if mac_address in pending_data_queue:
             esl_payload = pending_data_queue.pop(mac_address)
+            print("new pending_data_queue" , pending_data_queue)
             response = requests.post('http://192.168.1.100/wms/associate/updateScreen',
                                             json=esl_payload)
             if response.status_code == 200:
