@@ -69,12 +69,15 @@
         <canvas id="canvas" width="320" height="240" style="display: none;"></canvas>
     
         <div id="qr-result"></div>
-        <div id="qr-box"></div> <!-- Added div for drawing the box around QR code -->
+        <div id="qr-box" ></div> <!-- Added div for drawing the box around QR code -->
         <!-- Form to take input QR trolley number -->
-        
+        <div id="manual-input-container" style="margin-top: 10px;">
+            <input type="text" id="manual-qr-input" placeholder="Enter QR code manually" style="padding: 5px;">
+            <button id="btn-submit"  style="background-color: rgb(3, 180, 3); padding: 5px; border-radius: 5px; color: whitesmoke; border: 1px whitesmoke; transition: background-color 0.3s ease;" onmouseover="this.style.backgroundColor='green'" onmouseout="this.style.backgroundColor='rgb(3, 180, 3)'">Submit</button>
+        </div>
         <!-- Add buttons for OK and Cancel -->
         <div id="button-container" style="display: none;">
-            <button id="btn-ok" style="background-color: rgb(3, 180, 3); padding: 5px; border-radius: 5px; color: whitesmoke; border: 1px whitesmoke; transition: background-color 0.3s ease;" onmouseover="this.style.backgroundColor='green'" onmouseout="this.style.backgroundColor='rgb(3, 180, 3)'">OK</button>
+            <button id="btn-ok"  style="background-color: rgb(3, 180, 3); padding: 5px; border-radius: 5px; color: whitesmoke; border: 1px whitesmoke; transition: background-color 0.3s ease;" onmouseover="this.style.backgroundColor='green'" onmouseout="this.style.backgroundColor='rgb(3, 180, 3)'">OK</button>
             <button id="btn-cancel"  onclick="handleCancelButtonClick()" style="background-color: rgb(252, 10, 10); padding: 5px; border-radius: 5px; color: whitesmoke; border: 1px whitesmoke; transition: background-color 0.3s ease;" onmouseover="this.style.backgroundColor='lightred'" onmouseout="this.style.backgroundColor='rgb(252, 10, 10)'">Cancel</button>
         </div>
     </div>
@@ -139,6 +142,9 @@
     });
 });
 
+// Function to handle manual QR code input
+
+// Function to send QR code to the backend (scanned or manual)
 
        
     </script>

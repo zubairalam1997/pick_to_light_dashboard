@@ -1,47 +1,56 @@
 var qr_code = '';
-function openCamera(itemId ) {
+
+function openCameraContainer(itemId, asnNumber, modelDescription) {
     const videoElement = document.getElementById('camera-stream');
     const cameraContainer = document.getElementById('camera-container');
     const buttonContainer = document.getElementById('button-container');
     const btnOk = document.getElementById('btn-ok');
     const btnCancel = document.getElementById('btn-cancel');
-    const qrResultDiv = document.getElementById('qr-result'); // Get QR result div
-    const trolleyCellId = 'trolley-' + itemId;
-   
-    
+    const qrResultDiv = document.getElementById('qr-result');
+    const manualQrCodeInput = document.getElementById('manual-qr-input');
+    const btnSubmit = document.getElementById('btn-submit');
+
     // Clear QR result div when opening camera for a new row
     qrResultDiv.innerText = '';
 
-     // Update camera container to display ASN and model description
-     
-   
-    // Show camera container
-   
-    
+    // Set ASN Number and Model Description
+    var asnElement = document.getElementById('asn');
+    asnElement.innerText = 'Asn Number: ' + asnNumber;
+    asnElement.style.color = 'green';
+
+    var modelElement = document.getElementById('model');
+    modelElement.innerText = 'Model Description: ' + modelDescription;
+    modelElement.style.color = 'green';
+
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         navigator.mediaDevices.getUserMedia({ video: true })
             .then(function(stream) {
                 videoElement.srcObject = stream;
                 cameraContainer.style.display = 'block';
                 videoElement.style.display = 'block';
-                buttonContainer.style.display = 'block'; // Show button container
+                buttonContainer.style.display = 'block';
             })
             .catch(function(error) {
                 console.error('Error accessing camera:', error);
                 alert('Failed to access camera. Please try again.');
             });
     } else {
-        // cameraContainer.style.display = 'none';
         alert('Your browser does not support accessing the camera.');
     }
 
+    // Remove existing event listeners before adding new ones
+    btnOk.removeEventListener('click', handleOkButtonClick);
     btnOk.addEventListener('click', function() {
         handleOkButtonClick(itemId);
     });
 
-    btnCancel.addEventListener('click', function() {
-        handleCancelButtonClick();
-    });
+    btnCancel.removeEventListener('click', handleCancelButtonClick);
+    btnCancel.addEventListener('click', handleCancelButtonClick);
+
+    // btnSubmit.removeEventListener('click', handleSubmit);
+    // btnSubmit.addEventListener('click', function() {
+    //     handleSubmit(manualQrCodeInput.value);
+    // });
 
     videoElement.addEventListener('canplay', function() {
         const canvasElement = document.getElementById('canvas');
@@ -53,7 +62,7 @@ function openCamera(itemId ) {
             canvasContext.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
             const imageData = canvasContext.getImageData(0, 0, canvasElement.width, canvasElement.height);
             const code = jsQR(imageData.data, imageData.width, imageData.height);
-            console.log(code )
+            console.log(code)
             if (code) {
                 canvasContext.strokeStyle = '#00FF00';
                 canvasContext.lineWidth = 2;
@@ -62,19 +71,28 @@ function openCamera(itemId ) {
                 clearInterval(intervalId);
                 qr_code = code.data;
 
-                document.getElementById('qr-result').innerText = code.data; // Display QR code data on the page
-               
-                // Send code.data to your Django backend
-            sendDataToServer(qr_code ,true);
-            handleOkButtonClick();
-            
+                qrResultDiv.innerText = code.data; // Display QR code data on the page
+                sendDataToServer(qr_code);
+                handleOkButtonClick();
             }
         }, 1000);
     });
 }
 
-function sendDataToServer(data, shouldSendRequest = true) {
+function handleSubmit(inputValue) {
+    console.log('handleSubmit called with value:', inputValue); // Debug log
+    if (inputValue.trim() !== '') {
+        qr_code = inputValue;
+        document.getElementById('qr-result').innerText = inputValue; // Display manual QR code data on the page
+        sendDataToServer(qr_code);
+        handleOkButtonClick();
+        document.getElementById('manual-qr-input').value = ''; // Clear the input field
+    } else {
+        alert('Please enter a valid QR code.');
+    }
+}
 
+function sendDataToServer(data) {
     const xhr = $.ajax({
         url: '/getPayloadData/',  // URL to your Django view
         type: 'POST',
@@ -91,43 +109,15 @@ function sendDataToServer(data, shouldSendRequest = true) {
     console.log('Data:', data);
     const btnCancel = document.getElementById('btn-cancel');
     btnCancel.addEventListener('click', function() {
-      xhr.abort(); // Abort the request on cancel button click
-      console.log('AJAX request aborted.');
-      return ('' ,  false)
+        xhr.abort(); // Abort the request on cancel button click
+        console.log('AJAX request aborted.');
     });
-    
 }
 
-
-function openCameraContainer(itemId, asnNumber, modelDescription) {
-    // Show the camera container
-    document.getElementById('camera-container').style.display = 'block';
-
-    // Set ASN Number text with color
-    var asnElement = document.getElementById('asn');
-    asnElement.innerText = 'Asn Number: ';
-    var asnNumberSpan = document.createElement('span');
-    asnNumberSpan.innerText = asnNumber;
-    asnNumberSpan.style.color = 'green'; // Change color here
-    asnElement.appendChild(asnNumberSpan);
-
-    // Set Model Description text with color
-    var modelElement = document.getElementById('model');
-    modelElement.innerText = 'Model Description: ';
-    var modelDescriptionSpan = document.createElement('span');
-    modelDescriptionSpan.innerText = modelDescription;
-    modelDescriptionSpan.style.color = 'green'; // Change color here
-    modelElement.appendChild(modelDescriptionSpan);
-
-    // Call the function to open the camera stream
-    openCamera(itemId);
-}
-
-
-function handleOkButtonClick(){
+function handleOkButtonClick() {
     const videoElement = document.getElementById('camera-stream');
     const row_info = document.getElementById('camera-container');
-    const qrResultDiv = document.getElementById('qr-result'); 
+    const qrResultDiv = document.getElementById('qr-result');
 
     // Hide button container
     document.getElementById('button-container').style.display = 'none';
@@ -140,32 +130,22 @@ function handleOkButtonClick(){
     // Remove video element from display
     videoElement.style.display = 'none';
     row_info.style.display = 'none';
-     // Check if QR code data exists
-     if (qrResultDiv.innerText.trim() === '') {
+    manual_qr =document.getElementById('manual-qr-input').value
+
+    // Check if QR code data exists
+    if (qrResultDiv.innerText.trim() === '' && manual_qr.trim() === '') {
         alert('No QR code data found.');
         return;
     }
 }
 
 function handleCancelButtonClick() {
-    // Handle Cancel button click
     const videoElement = document.getElementById('camera-stream');
-    const canvasElement = document.getElementById('canvas');
-    const cameraContainer = document.getElementById('camera-container');
-
-    // Stop video stream
     const streamTracks = videoElement.srcObject.getTracks();
     streamTracks.forEach(track => track.stop());
 
-    // Clear canvas and hide button container
-    canvasElement.getContext('2d').clearRect(0, 0, canvasElement.width, canvasElement.height);
+    // Hide camera container and buttons
+    document.getElementById('camera-container').style.display = 'none';
     document.getElementById('button-container').style.display = 'none';
-
-    // Clear QR result
-    document.getElementById('qr-result').innerText = '';
-     // Remove video element from display
-     videoElement.style.display = 'none';
-     cameraContainer.style.display = 'none';
-     // Do not send the request when canceling
-    sendDataToServer('', false);
+    document.getElementById('camera-stream').style.display = 'none';
 }

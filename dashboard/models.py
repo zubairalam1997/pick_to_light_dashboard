@@ -102,5 +102,6 @@ class trolley_data(models.Model):
     )
     mac = models.CharField(max_length=50, blank=True, null=True)
     trolley_code = models.CharField( max_length=25,blank=True, null= True)
+    asn_num = models.CharField(max_length=50, blank=True, null=True)
     color = models.CharField(max_length=50, blank=True, null=True)
     trolley_picking_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='completed')

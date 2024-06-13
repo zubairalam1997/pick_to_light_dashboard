@@ -109,7 +109,7 @@ a{
 }
 .list-item a {
     text-decoration: none; /* Remove underline from links */
-    color: #000; /* White text color */
+    color: #fff; /* White text color */
     font-weight: 800;
 }
 

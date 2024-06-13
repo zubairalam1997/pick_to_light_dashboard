@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render ,  redirect
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
@@ -210,6 +210,7 @@ def get_Payload_Data(request):
                             if matching_trolley:
                                 trolley_mac = matching_trolley.mac
                                 matching_trolley.trolley_picking_status = "pending"
+                                matching_trolley.asn_num = asn_number
                                 matching_trolley.color = vc_color
                                 matching_trolley.save()
                                 trolley_payload = [{
@@ -220,6 +221,7 @@ def get_Payload_Data(request):
 
                                 response = requests.post('http://192.168.1.100/wms/associate/updateScreen', json=trolley_payload)
                                 response.raise_for_status()
+                                print("initial trolley payload" ,trolley_payload )
                             else:
                                 return JsonResponse({'error': 'No matching trolley found'}, status=404)
                         else:
@@ -243,10 +245,13 @@ def get_Payload_Data(request):
                 else:
                     pending_items = []
                     completed_items = []
+                    processed_macs = set()
 
                     # Loop through each item in the data_list
                     for item in data_list:
                             mac = item['mac']
+                            print("mac",mac ,  type(mac))
+                            
 
                             # Query the WorkTable for entries with the current MAC address
                             worktable_entries = WorkTable.objects.filter(tagid=mac)
@@ -254,31 +259,66 @@ def get_Payload_Data(request):
 
                             if worktable_entries.exists():
                                 for entry in worktable_entries:
-                                    if entry.status == 'pending':
+                                    if entry.tagid in [mac for mac in processed_macs]:
+                                        continue
+                                    eslid = str(entry.tagid) 
+                                    esl_id=str(eslid)
+                                    print('entry.tagid ',eslid )
+                                    print('eslid type ',type(eslid) )
+                                    if entry.status == 'pending':#also add asn using add operator 
                                         # Add to pending items and pending_data_queue
                                         pending_items.append(item)
                                         pending_data_queue[item['mac']].append(item)
+                                        processed_macs.add(eslid)
+                                        # Create WorkTable entry only if item is appended to pending_data_queue
+                                        if item in pending_data_queue[item['mac']]:
+                                            posted_vc = vc_number
+                                            try:
+                                                vc_n_asn_entry = vc_n_asn.objects.get(vcn=posted_vc)
+                                                asn_number = vc_n_asn_entry.asnn
+                                                WorkTable.objects.create(
+                                                tagid=item['mac'],
+                                                tagcode=item['qrcode'],
+                                                tagname=item['mac'],
+                                                stdatetime=timezone.now(),
+                                                partno=item['Part No.'],
+                                                partdesc=item['DESC'],
+                                                qty=item['QTY'],
+                                                asn=asn_number,
+                                            )
+                                            except vc_n_asn.DoesNotExist:
+                                                return JsonResponse({'error': 'VC number not found in vc_n_asn'}, status=404)
+                                            
+                                        print('processed_macs',processed_macs , type(processed_macs))
                                         print("pending_data_queue items", pending_data_queue)
                                         # print("pending items", pending_items)
                                         # Add MAC address to processed_macs and break out of loop
-                                        
-                                    elif entry.status == 'completed':
+
+                                for entry in worktable_entries:
+                                    if entry.tagid in [mac for mac in processed_macs]:
+                                        continue       
+                                    if entry.status == 'completed'and eslid not in processed_macs:
                                         # Check if MAC is not 
                                         #  processed as pending
-                                        if mac not in {entry['mac'] for entry in pending_items}:
+                                        
+                                            print("no entry.tagid in processed macs ")
                                             completed_items.append(item)
-                                            print("completed items", completed_items)
+                                            print("completed item appended", completed_items)
+                                        
+                                            
                                         # Exit the loop since we have categorized the item
                                         
                             else:
                                 # If no worktable entry is found, consider it as completed
-                                completed_items.append(item)
-                                print("completed items", completed_items)
+                                # if mac  not in processed_macs:
+                                    completed_items.append(item)
+                                    print("all completed iterms", completed_items)
 
                         # Check if there are any completed items to process
                     if completed_items:
                             response = requests.post('http://192.168.1.100/wms/associate/updateScreen', json=completed_items)
                             response.raise_for_status()
+                            # completed_items.clear()
                             posted_vc = vc_number
                             try:
                                 vc_n_asn_entry = vc_n_asn.objects.get(vcn=posted_vc)
@@ -300,16 +340,19 @@ def get_Payload_Data(request):
                                 if matching_trolley:
                                     trolley_mac = matching_trolley.mac
                                     matching_trolley.trolley_picking_status = "pending"
+                                    matching_trolley.asn_num = asn_number
+                                    pick_status =matching_trolley.trolley_picking_status
                                     matching_trolley.color = vc_color
                                     matching_trolley.save()
                                     trolley_payload = [{
                                         "mac": trolley_mac, "mappingtype": 135, "styleid": 54, "qrcode": asn_schedule_created.trqr,
-                                        "Status": "PENDING", "MODEL": asn_schedule_created.model,
+                                        "Status": "Pending..", "MODEL": asn_schedule_created.model,
                                         "VC": asn_schedule_created.vc_no, "ASN": asn_schedule_created.asn_no,
                                         "ledrgb": vc_color, "ledstate": "0", "outtime": "0"}]
 
                                     response = requests.post('http://192.168.1.100/wms/associate/updateScreen', json=trolley_payload)
                                     response.raise_for_status()
+                                    print("initial trolley payload" ,trolley_payload )
                                 else:
                                     return JsonResponse({'error': 'No matching trolley found'}, status=404)
                             else:
@@ -327,7 +370,7 @@ def get_Payload_Data(request):
                                     asn=asn_number,
                                 )
 
-                            return JsonResponse({'success': 'Data posted successfully'})
+                            return JsonResponse({'success': 'Data posted s successfully'})
                     else:
                             return JsonResponse({'error': 'Failed to post data'}, status=500)
 
@@ -407,160 +450,90 @@ def render_modal(request):
 @require_POST
 @csrf_exempt
 def enter_key(request):
-    print('this is reuest', request)
-    if request.method == 'POST':
+ try:
         data = json.loads(request.body)
         mac_address = data.get('mac')
-    
-        print('this is mac:', mac_address)
-        WorkTable_objects = WorkTable.objects.filter(tagid=mac_address)
-        WorkTable_objects.update(status='completed', eddatetime=timezone.now())
-        
+        print(f'Received MAC address: {mac_address}')
+
+        # Update WorkTable entry
+        worktable_entry = WorkTable.objects.filter(tagid=mac_address, status='pending').order_by('stdatetime').first()
+        if worktable_entry:
+            worktable_entry.status = 'completed'
+            worktable_entry.eddatetime = timezone.now()
+            worktable_entry.save()
+            print(f'Updated WorkTable entry for MAC address: {mac_address}')
+
+        # Handle pending data queue
         if mac_address in pending_data_queue:
-            esl_payload = pending_data_queue.pop(mac_address)
-            print("new pending_data_queue" , pending_data_queue)
-            response = requests.post('http://192.168.1.100/wms/associate/updateScreen',
-                                            json=esl_payload)
-            if response.status_code == 200:
-                for item in esl_payload:
-                    WorkTable.objects.create(
-                                        tagid=item['mac'],
-                                        tagcode=item['qrcode'],
-                                        tagname=item['mac'],
-                                        stdatetime=timezone.now(),
-                                        partno=item['Part No.'],
-                                        partdesc=item['DESC'],
-                                        qty=item['QTY'],
-                                        # asn=asn_number,
-                                    )
-                print("Data pending posted  successfully:", esl_payload)
+            if pending_data_queue[mac_address]:
+                esl_payload = [pending_data_queue[mac_address].pop(0)]
+                response = requests.post('http://192.168.1.100/wms/associate/updateScreen', json=esl_payload)
+                if response.status_code == 200:
+                    print(f'Data posted successfully for MAC address: {mac_address}')
+                else:
+                    print(f'Failed to post data for MAC address: {mac_address}, Status Code: {response.status_code}, Response: {response.text}')
             else:
-                print("Failed to post data:", response.status_code, response.text)
+                print(f'No data in pending_data_queue for MAC address: {mac_address}')
         else:
-            print(f"No data found for MAC address {mac_address}")
-            
-        print('this is mac:', mac_address)
-        WorkTable_objects = WorkTable.objects.filter(tagid=mac_address)
-        WorkTable_objects.update(status='completed', eddatetime=timezone.now())        
-        try:
-            # Subquery to check if there are any entries with pending status for the same ASN number
-            pending_subquery = WorkTable.objects.filter(
-                asn=OuterRef('asn'), status='pending'
-            )
+            print(f'No data found for MAC address: {mac_address}')
 
-            # Annotate each ASN number with a flag indicating if any entry has a pending status
-            completed_work_table = WorkTable.objects.annotate(
-                any_pending=Exists(pending_subquery)
-            )
+        
+        # Orders the filtered results by eddatetime in descending orderand Retrieves the first entry from the ordered results, which will be the most recent one based on eddatetime 
+        latest_completed_worktable =  WorkTable.objects.filter(tagid=mac_address, status='completed').order_by('-eddatetime').first()
+        # Check the ASN of the updated worktable entry
+        asn = latest_completed_worktable.asn
 
-            # Filter to get only those ASN numbers where all entries are completed and none has a pending status
-            filtered_work_table = completed_work_table.values('asn').annotate(
-                completed_count=Count('id', filter=Q(status='completed')),
-            ).filter(
-                completed_count=Count('id'),
-                any_pending=False,
-            )
+        # Check all WorkTable entries related to the ASN
+        related_worktables = WorkTable.objects.filter(asn=asn)
+        all_completed = all(entry.status == 'completed' for entry in related_worktables)
 
-            # Get the distinct ASN numbers from the filtered queryset
-            completed_asn_values = [item['asn'] for item in filtered_work_table]
+        if all_completed:
+            # Update the AsnSchedule status to 'completed'
+            asn_schedule = AsnSchedule.objects.filter(asn_no=asn).first()
+            if asn_schedule:
+                asn_schedule.selection_status = 'completed'
+                asn_schedule.end_time = timezone.now()
+                asn_schedule.save()
+                print(f'ASN Schedule {asn} updated to completed')
 
-            # Filter AsnSchedule objects based on the completed ASN numbers
-            completed_asn_schedule = AsnSchedule.objects.filter(asn_no__in=completed_asn_values).update(selection_status="completed")
-            completed_picks = AsnSchedule.objects.filter(asn_no__in=completed_asn_values).distinct('asn_no')
-            # for item in completed_picks:
-            #     item.selection_status = "completed" 
-            #     item.save()
-            #             # Retrieve completed AsnSchedule objects with ASN, VC, and model
-            
-            print("completed_asn_schedule",completed_asn_schedule)
-            # Iterate over completed picks to update trolley payload status
-            completed_trqrs = completed_picks.values_list('trqr', flat=True)
-            # Filter trolley_data based on the trqrs from completed picks
-            matching_trolleys = trolley_data.objects.filter(trolley_code__in=completed_trqrs)
-            # Initialize an empty list to store trolley_mac values
-            trolley_macs = []
-            # Iterate over matching trolleys, update their status to completed, and collect their mac addresses
+            # Update the trolley status to 'completed' if matched with the ASN
+            matching_trolleys = trolley_data.objects.filter(asn_num=asn )
             for trolley in matching_trolleys:
-                trolley.trolley_picking_status = "completed"
+                trolley.trolley_picking_status = 'completed'
                 trolley.save()
-                trolley_macs.append([trolley.mac,trolley.color ,trolley.trolley_picking_status])
-            # for pick in completed_picks:
-            #     trolley_codes=trolley_data.objects.filter(trolley_code__in=completed_trqrs)
-            #     if pick.trqr == trolley_codes.trolley_code:
-            #         asn=pick.asn_no
-            #         vc=pick.vc_no
-            #         model=pick.model
-            #         color=pick.color
-            #         status="completed"
+                print(f'Trolley {trolley.mac} updated to completed')
 
-                try:
-                    #trolley_macs.append([trolley.mac,trolley.color ,trolley.trolley_picking_status])
+                # Form the payload and post it
+                trolley_payload = [{
+                    "mac": trolley.mac,
+                    "Status": trolley.trolley_picking_status,
+                    "mappingtype": 135,
+                    "styleid": 54,
+                    "qrcode": asn_schedule.trqr,
+                    "MODEL": asn_schedule.model,
+                    "VC": asn_schedule.vc_no,
+                    "ASN": asn_schedule.asn_no+".",
+                    "ledrgb": trolley.color,
+                    "ledstate": "1",
+                    "outtime": "3"
+                }]
+                if trolley.trolley_picking_status == 'completed':
 
-                    # Construct payload for trolley screen update
-                    trolley_payload = []
-                    # for mac, color ,trolley_picking_status in trolley_macs:
-                    #     #  matching_asn_schedule = AsnSchedule.objects.filter(selection_status="completed").values('asn_no', 'vc_no', 'model') # Assuming 'trar' is the field containing trolley QR
-                    #     #  for asn_schedule in matching_asn_schedule:
-                    #             trolley_payload=[
-                    #                 {"mac": mac, "mappingtype": 135, "styleid": 54, "qrcode": "",
-                    #                 "Status": trolley_picking_status,  "ledrgb": color, "ledstate": "1", "outtime": "3",                      
-                    #                     # Include additional data from ASN schedule
-                    #                     }
 
-                    #             ]
-                                # Iterate over matching trolleys and completed ASN schedule to collect data
-                    for trolley in matching_trolleys:
-                        mac=trolley.mac,
-                        color=trolley.color,
-                        picking_status=trolley.trolley_picking_status,
-                    payload_list = []   
-                    completed_trolleys = trolley_data.objects.filter(trolley_picking_status="completed")
-
-                    for pick in completed_picks:
-                        # Iterate over completed_trolleys to find a match
-                        for completed_trolley in completed_trolleys:
-                            if pick.trqr == completed_trolley.trolley_code:
-                                macc = completed_trolley.mac
-                                asn = pick.asn_no
-                                vc = pick.vc_no
-                                model = pick.model
-                                color = pick.color 
-                                tr_qr = pick.trqr
-                                status = "completed"     
-                                payload_list.append((macc, asn, vc, model, color, tr_qr, status))
-                                # Append the data to the payload list as a tuple
-
-                                trolley_payload=[{
-                                    "mac": 
-                                    macc,  # Assuming 'mac' is the field containing the MAC address
-                                    "mappingtype": 135,
-                                    "styleid": 54,
-                                    "qrcode": tr_qr,
-                                    "Status": "Completed",
-                                    "ASN": asn,
-                                    "VC": vc,
-                                    "MODEL": model,
-                                    "ledrgb": color,
-                                    "ledstate": "1",
-                                    "outtime": "3",
-                                }]
-                        print("trolley_data",trolley_payload)   
-
-                    # Send POST request to update trolley picking status
-                    response = requests.post('http://192.168.1.100/wms/associate/updateScreen',
-                                             json=trolley_payload)
+                    response = requests.post('http://192.168.1.100/wms/associate/updateScreen', json=trolley_payload)
                     response.raise_for_status()
-                    print("this is response",response.text)
+                    print(f'Trolley data updated successfully, Response: {response.text}',trolley_payload)
+                    trolley.asn_num= None
+                    trolley.save()
 
-                except trolley_data.DoesNotExist:
-                    # Handle the case where no matching trolley data is found
-                    pass
+ except (WorkTable.DoesNotExist, AsnSchedule.DoesNotExist, trolley_data.DoesNotExist) as e:
+        print(f'Exception occurred: {e}')
+        return JsonResponse({'message': 'Request processed for trolley successfully'})
+ except requests.exceptions.RequestException as e:
+        print(f'Request to external service failed: {e}')
+        return JsonResponse({'message': 'Failed to update trolley data', 'error': str(e)}, status=500)
 
-        except AsnSchedule.DoesNotExist:
-
-            return JsonResponse({'message': 'Request processed for trolley successfully'})
-
-
+ return JsonResponse({'message': 'Request processed successfully'})
 def completed_kittings(request):
     try:
         # Subquery to check if there are any entries with pending status for the same ASN number
@@ -592,3 +565,79 @@ def completed_kittings(request):
     except AsnSchedule.DoesNotExist:
         # Handle the case where no AsnSchedule objects are found
         return render(request, 'completed_kittings.html', {'completed_picks': None})
+
+@require_POST
+@csrf_exempt
+def kitting_config(request):
+    try:
+        data = json.loads(request.body)
+        asn_number = data.get('asn_number')
+        print(f'Received ASN number: {asn_number}')
+
+        # Fetch and update WorkTable entries
+        worktable_entries = WorkTable.objects.filter(asn=asn_number)
+        worktable_entries.update(status='completed', eddatetime=timezone.now())
+        print(f'Updated WorkTable entries for ASN number: {asn_number}')
+
+        # Update ASN schedule
+        asn_schedule = AsnSchedule.objects.filter(asn_no=asn_number).first()
+        if asn_schedule:
+            asn_schedule.selection_status = 'completed'
+            asn_schedule.end_time = timezone.now()
+            asn_schedule.save()
+            print(f'ASN Schedule {asn_number} updated to completed')
+
+            # Update trolley data
+            matching_trolleys = trolley_data.objects.filter(asn_num=asn_number)
+            for trolley in matching_trolleys:
+                trolley.trolley_picking_status = 'completed'
+                trolley.save()
+                print(f'Trolley {trolley.mac} updated to completed')
+
+                # Form the payload and post it
+                trolley_payload = {
+                    "mac": trolley.mac,
+                    "mappingtype": 135,
+                    "styleid": 54,
+                    "qrcode": asn_schedule.trqr,
+                    "Status": "Completed",
+                    "MODEL": asn_schedule.model,
+                    "VC": asn_schedule.vc_no,
+                    "ASN": asn_schedule.asn_no,
+                    "ledrgb": trolley.color,
+                    "ledstate": "1",
+                    "outtime": "3"
+                }
+
+                response = requests.post('http://192.168.1.100/wms/associate/updateScreen', json=trolley_payload)
+                response.raise_for_status()
+                print(f'Trolley data updated successfully, Response: {response.text}')
+
+        # Send payload to each ESL whose WorkTable entry comes under the given ASN
+        for worktable_entry in worktable_entries:
+            vc_data = asn_schedule  # Assuming vc_data is similar to asn_schedule, adjust as needed
+            esl_payload = {
+                "Part No.": worktable_entry.partno,
+                "DESC": worktable_entry.partdesc ,
+                "QTY": worktable_entry.qty,
+                "mac": worktable_entry.tagid,
+                "ledstate": "0",
+                "ledrgb": worktable_entry.color,  # Ensure this color is fetched correctly
+                "outtime": "1",
+                "styleid": "50",
+                "qrcode": "2001",
+                "mappingtype": "79"
+            }
+            response = requests.post('http://192.168.1.100/wms/associate/updateESL', json=esl_payload)
+            response.raise_for_status()
+            print(f'ESL data updated successfully for MAC {worktable_entry.tagid}, Response: {response.text}')
+
+        return JsonResponse({'message': 'ASN status and related data updated successfully'})
+    except (WorkTable.DoesNotExist, AsnSchedule.DoesNotExist, trolley_data.DoesNotExist) as e:
+        print(f'Exception occurred: {e}')
+        return JsonResponse({'message': 'Error processing ASN', 'error': str(e)}, status=500)
+    except requests.exceptions.RequestException as e:
+        print(f'Request to external service failed: {e}')
+        return JsonResponse({'message': 'Failed to update ESL data', 'error': str(e)}, status=500)
+def asn_input(request):
+    return render(request, 'kitting_config.html')

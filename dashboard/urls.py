@@ -10,4 +10,6 @@ urlpatterns=[
     path('render_modal/', views.render_modal, name='render_modal'),
     path('enter-key', views.enter_key, name='enter_key'),
     path('completed_kittings/', views.completed_kittings, name='completed_kittings'),
+    path('complete_asn/', views.kitting_config, name='kitting_config'),
+    path('asn_input/', views.asn_input, name='asn_input'),
 ]

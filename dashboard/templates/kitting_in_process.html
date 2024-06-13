@@ -28,6 +28,7 @@
 
 <!-- Modal -->
 <div id="myModal" class="modal">
+    <span id="clicked_asn_span" ><h2 id="clicked-asn"></h2></span>
      {% include 'modal.html' %}
 </div>
 
@@ -67,7 +68,7 @@ function sendASNToBackend(asnNumber) {
     .then(data => {
         console.log('Backend response:', data);
         // Populate the modal with received data
-        populateModal(data);
+        populateModal(data , asnNumber);
     })
     .catch(error => {
         console.error('Error sending ASN number:', error);
@@ -75,7 +76,7 @@ function sendASNToBackend(asnNumber) {
 }
 
 // Function to populate the modal with data
-function populateModal(data) {
+function populateModal(data , asnNumber) {
     const formData = new FormData();
     formData.append('open_modal_data', JSON.stringify(data));
 
@@ -98,7 +99,7 @@ function populateModal(data) {
         modalBody.innerHTML = htmlContent;
 
         // Show the modal
-        openModal();
+        openModal(asnNumber);
     })
     .catch(error => {
         console.error('Error populating modal:', error);
@@ -127,12 +128,21 @@ function getCookie(name) {
 const modal = document.getElementById('myModal');
 
 // Function to open the modal
-function openModal() {
-    modal.style.display = 'block';
-     // Center the modal
-    modal.style.top = "0%";
-    modal.style.left = "25%";
-    modal.style.zIndex = 10;
+function openModal(asnNumber) {
+
+    // Set the text content of the <h2> element to the clicked ASN number
+        var clicked_asn_row =document.getElementById('clicked-asn');
+        clicked_asn_row .innerText = "kitting in Process Data for ASN :"+ asnNumber;
+        var clicked_asn_span =document.getElementById('clicked-asn-data');
+        clicked_asn_row.style.color='whitesmoke';
+        clicked_asn_row.style.background="#3552f7"
+
+        modal.style.display = 'block';
+    // Center the modal
+    
+        modal.style.top = "4%";
+        modal.style.left = "14%";
+        modal.style.zIndex = 10;
 
    
 }
