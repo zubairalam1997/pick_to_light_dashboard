@@ -67,7 +67,7 @@ a{
 
 .list-items{
     display: block;
-    background: gray;
+    background: rgb(128, 128, 128);
     
 }
 /* Navigation menu styles */
@@ -88,7 +88,7 @@ a{
     /* Display list items inline */
     display: inline-block; /* Display list items inline */
     padding: 10px;
-    background: gray;
+    background: #f25f02;
     flex-grow: 1; /* Make list-item acquire all remaining space */
     text-align: center; /* Center the text horizontally */
     border: 1px solid transparent;
@@ -117,4 +117,22 @@ a{
 .list-item:hover a {
     color: #fff;  /* Change anchor tag color to white when hovering over list item */
     text-decoration: none;  /* Remove underline decoration */
+}
+/* styles.css */
+.life_cycle {
+    display: flex;
+    padding: 6px;
+    background: #f25f02;
+    justify-content: space-around;
+    border: 1px solid #ccc;
+
+}
+
+.life_cycle > div {
+    padding: 10px;
+    margin-right: 10px; /* Example spacing between divs */
+    font-size: larger;
+    font-weight: 600;
+    color: #fff;
+    
 }

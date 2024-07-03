@@ -52,6 +52,8 @@ function openCameraContainer(itemId, asnNumber, modelDescription) {
     //     handleSubmit(manualQrCodeInput.value);
     // });
 
+    
+
     videoElement.addEventListener('canplay', function() {
         const canvasElement = document.getElementById('canvas');
         const canvasContext = canvasElement.getContext('2d');
@@ -79,14 +81,16 @@ function openCameraContainer(itemId, asnNumber, modelDescription) {
     });
 }
 
-function handleSubmit(inputValue) {
-    console.log('handleSubmit called with value:', inputValue); // Debug log
-    if (inputValue.trim() !== '') {
-        qr_code = inputValue;
-        document.getElementById('qr-result').innerText = inputValue; // Display manual QR code data on the page
+function handleSubmit(manualQrCode) {
+    if (manualQrCode && manualQrCode.trim() !== '') {
+        qr_code = manualQrCode.trim();
+        const qrResultDiv = document.getElementById('qr-result');
+        qrResultDiv.innerText = qr_code; // Display QR code data on the page
         sendDataToServer(qr_code);
         handleOkButtonClick();
-        document.getElementById('manual-qr-input').value = ''; // Clear the input field
+        // Clear the input field
+        const manualQrCodeInput = document.getElementById('manual-qr-input');
+        manualQrCodeInput.value = '';
     } else {
         alert('Please enter a valid QR code.');
     }

@@ -41,6 +41,10 @@
     margin-top: 0px;
 }
 
+tr.table-row {
+    height: 35px;
+}
+
 .modal-table th,
 .modal-table td {
     border: 1px solid #dddddd;
@@ -48,7 +52,10 @@
     padding: 8px;
 }
 
-
+.table-cell {
+    text-transform: uppercase;
+  }
+  
 .modal-content table tbody td{
     padding: 5px 10px;
     border:none;

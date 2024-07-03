@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VC Database List</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <!-- Other CSS and JS includes -->
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .action-buttons a {
+            text-decoration: none;
+            padding: 5px 10px;
+            color: white;
+            background-color: #007bff;
+            border-radius: 5px;
+        }
+        .action-buttons a.delete {
+            background-color: #dc3545;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 2px auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>VC Model Matrix</h1>
+     <!-- Upload Form -->
+     <form id="uploadForm" method="post" action="{% url 'upload_excel' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="excel_file" accept=".xlsx, .xls">
+        <button type="button" onclick="uploadFile()">Upload Excel</button>
+    </form>
+    <table>
+        <thead>
+            <tr>
+                <th>Sno.</th>
+                <th>Side</th>
+                <th>Part No</th>
+                <th>Part Description</th>
+                <th>Quantity</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vc in vcs %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ vc.side }}</td>
+                <td>{{ vc.partno }}</td>
+                <td>{{ vc.part_desc }}</td>
+                <td>{{ vc.quantity }}</td>
+                <td class="action-buttons">
+                    <a href="#" class="edit-button" data-id="{{ vc.id }}">Edit</a>
+                    <a href="#" class="delete" data-partno="{{ vc.partno }}" onclick="deleteRow(this)">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- The Modal -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Edit VC Entry model matrix</h2>
+            <form id="editForm" method="post" action="{% url 'update_vc' %}">
+                {% csrf_token %}
+                <input type="hidden" id="vcId" name="vc_id" value="">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Checkbox</th>
+                            <th>VC Number</th>
+                            <th>Model Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for vc_master in vc_masters %}
+                        <tr>
+                            <td><input type="checkbox" name="vc_master_id" value="{{ vc_master.id }}"></td>
+                            <td>{{ vc_master.vcnumber }}</td>
+                            <td>{{ vc_master.model }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <br>
+                <label for="partNumber">Part Number:</label>
+                <input type="text" id="partNumber" name="part_number" readonly>
+                <br><br>
+                <label for="partDesc">Part Description:</label>
+                <input type="text" id="partDesc" name="part_desc" readonly>
+                <br><br>
+                <label for="quantity">Quantity:</label>
+                <input type="number" id="quantity" name="quantity">
+                <br><br>
+                <button type="submit">Update</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Get the modal
+        var modal = document.getElementById("myModal");
+
+        // Get the button that opens the modal
+        var btns = document.getElementsByClassName("edit-button");
+
+        // Get the <span> element that closes the modal
+        var span = document.getElementsByClassName("close")[0];
+
+        // When the user clicks the button, open the modal 
+        for (var i = 0; i < btns.length; i++) {
+            btns[i].onclick = function() {
+                var vcId = this.getAttribute("data-id");
+                document.getElementById("vcId").value = vcId;
+                var row = this.parentNode.parentNode;
+                var partNo = row.cells[2].innerText;
+                var partDesc = row.cells[3].innerText;
+                var quantity = row.cells[4].innerText;
+                document.getElementById("partNumber").value = partNo;
+                document.getElementById("partDesc").value = partDesc;
+                document.getElementById("quantity").value = quantity;
+
+                // Print part number in console
+                console.log("Fetching existing VC entries for part_no:", partNo);
+// Uncheck all checkboxes first
+var allCheckboxes = document.querySelectorAll("input[type='checkbox']");
+                    allCheckboxes.forEach(checkbox => checkbox.checked = false);
+// Fetch existing entries for the part number and check the corresponding checkboxes
+fetch(`/fetch-existing-vc-entries/?part_no=${encodeURIComponent(partNo)}`)
+    .then(response => response.json())
+    .then(data => {
+        // Print received data in console
+        console.log("Received data:", data);
+
+        var rows = document.querySelectorAll("table tbody tr");
+                        rows.forEach(row => {
+                            var vcNo = row.cells[1].innerText; // Assuming the VC number is in the second column
+                            if (data.includes(vcNo)) {
+                                var checkbox = row.querySelector("input[type='checkbox']");
+                                if (checkbox) {
+                                    checkbox.checked = true;
+                                }
+                            }
+                        });
+    })
+    .catch(error => console.error('Error:', error));
+                modal.style.display = "block";
+            };
+        }
+        // When the user clicks on <span> (x), close the modal
+        span.onclick = function() {
+            modal.style.display = "none";
+        };
+
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        };
+        function deleteRow(button) {
+            // Get the row of the clicked button
+            var row = button.parentNode.parentNode;
+            // Get the part number from the row
+            var partNumber = row.cells[2].innerText;
+            // Confirm before deletion
+            if (confirm("Are you sure you want to delete part number " + partNumber + "?")) {
+                // Perform any additional actions, such as updating the server
+                // For example, make an AJAX call to delete the part number from the server
+                fetch(`/delete_vc/${partNumber}/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}' // Add CSRF token for security
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Delete the row from the table
+                        row.parentNode.removeChild(row);
+                        alert("Part number " + partNumber + " deleted successfully.");
+                    } else {
+                        alert("Failed to delete part number " + partNumber);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("An error occurred. Please try again.");
+                });
+            }
+        }
+         function uploadFile() {
+            var formData = new FormData(document.getElementById('uploadForm'));
+            var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            var messageDiv = document.getElementById('message');
+
+            fetch('{% url "upload_excel" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    messageDiv.innerHTML = `<div style="color: green;">${data.message}</div>`;
+                } else {
+                    messageDiv.innerHTML = `<div style="color: red;">${data.message}</div>`;
+                }
+            })
+            .catch(error => {
+                messageDiv.innerHTML = `<div style="color: red;">An error occurred: ${error}</div>`;
+            });
+        }
+        
+        toastr.options = {
+            "closeButton": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "showDuration": "300",
+            "hideDuration": "1000",
+            "timeOut": "5000",
+            "extendedTimeOut": "1000",
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        };
+
+        // Check for Django messages and display Toastr notifications
+        {% if messages %}
+            {% for message in messages %}
+                toastr.{{ message.tags }}('{{ message }}');
+            {% endfor %}
+        {% endif %}
+    </script>
+    
+</body>
+</html>

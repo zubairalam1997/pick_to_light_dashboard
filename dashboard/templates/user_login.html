@@ -1,0 +1,36 @@
+{%load static%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="{% static 'css/user_login.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+</head>
+<body>
+    <h2>Login</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="id_username">Username/UserId</label> <br>
+            <input type="text" name="username" id="id_username" class="form-control">
+        </div>
+        <div class="form-group">
+            <label for="id_password">Password</label> <br>
+            <input type="password" name="password" id="id_password" class="form-control">
+        </div>
+        <button type="submit" class="login-btn">Login</button>
+    </form>
+
+    <script>
+        {% if messages %}
+            {% for message in messages %}
+                toastr["{{ message.tags }}"]("{{ message }}");
+            {% endfor %}
+        {% endif %}
+    </script>
+</body>
+</html>

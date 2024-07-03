@@ -32,7 +32,7 @@ class EslPart(models.Model):
     tagid = models.CharField(max_length=50, blank=True, null=True)
     tagname = models.CharField(max_length=58, blank=True, null=True)
     tagcode = models.CharField(max_length=59, blank=True, null=True)
-    min1 = models.IntegerField(blank=True, null=True)
+    quantity = models.IntegerField(blank=True, null=True)
     max1 = models.IntegerField(blank=True, null=True)
 
     

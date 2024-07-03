@@ -18,6 +18,10 @@
             <div class="zone-name">
                 <h2>TCF-1A: Kitting Zone</h2>
             </div>
+            <div class="authentication">
+                <span><a href="{% url 'login'%}">Login/</a> </span>
+                <span> <a href="{% url 'register'%}">Register</a></span>
+            </div>
             <!-- <div class="search-bar">
                 <form action="*" method="post">
                     {% csrf_token %}
@@ -26,7 +30,7 @@
                 </form>
             </div> -->
             <div class="tata-logo">
-                <h3>Tata Motors</h3>
+                <h3 style="color: yellow; font-size: xx-large; font-weight: bolder;">Nexage Technology</h3>
             </div>
         </div> 
         
@@ -44,9 +48,23 @@
             </li>
         </ul>
     </div>
+    <div class="life_cycle" >
+
+        <div class="num_of_plan" style="padding: 10px;">Number of plan: <span >{{ no_of_plan }}</span></div>
+        <div class="no_of_inprocess">Number of kitting in process: {{ no_of_kitting_in_process }}</div>
+        <div class="completed_list">Number of completed plans: {{ no_of_completed_plan }}</div>
+        <div>Average Cycle Time: 
+            {% if avg_cycle_time %}
+                {{ avg_cycle_time }}
+            {% else %}
+                No completed plans
+            {% endif %}
+        </div>
+    </div>
     
     {% block content %}
     {% endblock %}
+    
 
 </body>
 </html>

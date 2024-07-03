@@ -12,4 +12,13 @@ urlpatterns=[
     path('completed_kittings/', views.completed_kittings, name='completed_kittings'),
     path('complete_asn/', views.kitting_config, name='kitting_config'),
     path('asn_input/', views.asn_input, name='asn_input'),
+    path('vc_list/', views.vc_list, name='vc_list'),
+    path('fetch-existing-vc-entries/', views.fetch_existing_vc_entries, name='fetch_existing_vc_entries'),
+    path('update-vc/', views.update_vc, name='update_vc'),
+     path('edit_vc/<int:id>/', views.edit_vc, name='edit_vc'),
+    path('delete_vc/<str:part_no>/', views.delete_vc, name='delete_vc'),
+     path('upload-excel/', views.upload_excel, name='upload_excel'),
+     path('login/', views.user_login, name='login'),
+    path('logout/', views.user_logout, name='logout'),
+    path('register/', views.user_register, name='register'),
 ]
