@@ -12,7 +12,7 @@
     <header class="header">
         <div class="top-head">
             <div class="configuraton-tag">
-                <span style="padding-right: 6px;"><a href="*">Model matrix</a></span>
+                <span style="padding-right: 6px;"><a href="/vc_list">Model matrix</a></span>
                 <span><a href="{% url 'asn_input'%}">kitting configuration</a></span>
             </div>
             <div class="zone-name">
@@ -20,7 +20,7 @@
             </div>
             <div class="authentication">
                 <span><a href="{% url 'login'%}">Login/</a> </span>
-                <span> <a href="{% url 'register'%}">Register</a></span>
+                <span> <a href="{% url 'register'%}">Signup</a></span>
             </div>
             <!-- <div class="search-bar">
                 <form action="*" method="post">
@@ -57,7 +57,7 @@
             {% if avg_cycle_time %}
                 {{ avg_cycle_time }}
             {% else %}
-                No completed plans
+                0
             {% endif %}
         </div>
     </div>

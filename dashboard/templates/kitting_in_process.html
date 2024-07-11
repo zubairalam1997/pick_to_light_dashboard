@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'css/pick_plan.css' %}">
+<link rel="stylesheet" href="{% static 'css/kitting_in_process.css' %}">
 <link rel="stylesheet" href="{% static 'css/modal.css' %}">
 
 <table class="data-table">
@@ -12,6 +12,7 @@
             <th class="table-header">VC Number</th>
             <th class="table-header">Model Description</th>
             <th class="table-header">Start Time</th>
+            <th class="table-header">Indicator</th>
         </tr>
     </thead>
     <tbody id="data-body">
@@ -21,6 +22,25 @@
             <td class="table-cell vc-number">{{ entry.vc_no }}</td>
             <td class="table-cell">{{ entry.model }}</td>
             <td class="table-cell">{{ entry.start_time }}</td>
+            <td class="table-cell">
+                {% if entry.color == 'ff00' %}
+                <span class="color-dot blink" style="background-color: rgb(3, 198, 36);"></span>
+                {% elif entry.color == 'ffff00' %}
+                <span class="color-dot blink" style="background-color: rgb(203, 250, 75);"></span>
+                {% elif entry.color == 'ff' %}
+                <span class="color-dot blink" style="background-color: rgb(0, 110, 255);"></span>
+                {% elif entry.color == 'ff0000' %}
+                <span class="color-dot blink" style="background-color: red;"></span>
+                {% elif entry.color == 'ff00ff' %}
+                <span class="color-dot blink" style="background-color: rgb(241, 11, 241);"></span>
+                {% elif entry.color == 'ffffff' %}
+                <span class="color-dot blink" style="background-color: rgb(163, 246, 246);"></span>
+                {% elif entry.color == '00ffff' %}
+                <span class="color-dot blink" style="background-color: whitesmoke;"></span>
+                {% else %}
+                <span class="color-dot blink" style="background-color: black"></span>
+                {% endif %}
+            </td>
         </tr>
         {% endfor %}
     </tbody>

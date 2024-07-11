@@ -6,7 +6,8 @@ def avg_cycle_list(request):
     no_of_plan = vc_n_asn.objects.count()
 
     # Count the number of kitting in process plans
-    no_of_kitting_in_process = AsnSchedule.objects.filter(selection_status='processing').count()
+    no_of_kitting_in_process = AsnSchedule.objects.filter(selection_status='Pending...').count()
+    
 
     # Count the number of completed plans
     no_of_completed_plan = AsnSchedule.objects.filter(selection_status='completed').count()
