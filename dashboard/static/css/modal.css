@@ -8,6 +8,7 @@
     margin: 0;
     padding: 0;
     width: 70%;
+    height: 90%;
     overflow: auto;
     background-color: rgba(28, 86, 245, 0.4);
 }

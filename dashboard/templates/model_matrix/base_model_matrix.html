@@ -1,0 +1,26 @@
+{%load static%}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="{% static 'css/model_matrix_css/base_model_matrix.css' %}">
+</head>
+<body>
+    <div class="model_matrix_head">
+        <ul>
+            <a href="{% url 'picking_plan'%}">  <li class="mode_matrix-item">Home</li></a>
+            <a href="{% url 'Part_VC_Map_Data' %}"><li class="mode_matrix-item{% if request.path == 'Part_VC_Map_Data/' %} active{% endif %}"> Map Part to VCs  </li></a>
+            <a href="{% url 'add_esl_part_template'%}">  <li class="mode_matrix-item">Add New Part</li></a>
+            <a href="{% url 'add_new_trolley_template'%}"><li class="mode_matrix-item">Add Trolley Esl </li></a>
+            <a href="{% url 'vc_model_mapping_template'%}"><li class="mode_matrix-item">Map VC to Model</li></a>
+            
+            
+        </ul>
+    </div>
+    {% block content %}
+    {% endblock %}
+</body>
+</html>

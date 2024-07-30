@@ -1,0 +1,93 @@
+{% extends 'model_matrix/base_model_matrix.html' %}
+
+{% block content %}
+{% load static %}
+<head>
+    <link rel="stylesheet" href="{% static 'css/model_matrix_css/add_esl_part.css' %}">
+</head>
+
+<div class="container">
+    <h2>Add ESL Part</h2>
+    <form id="addPartForm" method="post">
+        {% csrf_token %}
+        <label for="newPartNumber">Part Number:</label>
+        <input type="text" id="newPartNumber" name="part_no" required>
+        <br>
+        <label for="tagId">Tag Id:</label>
+        <input type="text" id="tagId" name="tagId" required>
+        <br>
+        <label for="newPartDesc">Part Description:</label>
+        <input type="text" id="newPartDesc" name="part_desc" required>
+        <br>
+        <label for="newQuantity">Quantity:</label>
+        <input type="number" id="newQuantity" name="quantity" required>
+        <br>
+        <button type="button" onclick="addEslPart()">Add ESL Part</button>
+        <br>
+        <label for="eslExcelFile">Upload Excel File:</label>
+        <input type="file" id="eslExcelFile" name="excel_file" accept=".xlsx, .xls">
+        <button type="button" onclick="uploadEslExcel()">Upload Excel</button>
+    </form>
+</div>
+
+<script>
+    function addEslPart() {
+        var formData = new FormData(document.getElementById('addPartForm'));
+        var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        fetch('{% url "add_esl_part" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("ESL Part added successfully.");
+                location.reload();
+            } else {
+                alert("Failed to add ESL Part: " + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("An error occurred. Please try again.");
+        });
+    }
+
+    function uploadEslExcel() {
+        var formData = new FormData();
+        var fileInput = document.getElementById('eslExcelFile');
+        var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        if (fileInput.files.length > 0) {
+            formData.append('excel_file', fileInput.files[0]);
+            fetch('{% url "upload_esl_excel" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("ESL Excel uploaded and data updated successfully.");
+                    location.reload();
+                } else {
+                    alert("Failed to upload ESL Excel: " + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("An error occurred. Please try again.");
+            });
+        } else {
+            alert("Please select an Excel file to upload.");
+        }
+    }
+</script>
+
+{% endblock %}

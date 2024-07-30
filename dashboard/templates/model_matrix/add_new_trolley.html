@@ -1,0 +1,66 @@
+{% extends 'model_matrix/base_model_matrix.html' %}
+
+{% block content %}
+{% load static %}
+<head>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/model_matrix_css/add_new_trolley.css' %}">
+</head>
+
+<div class="trolley_template" style="margin-top: 100px; ">
+    <div class="container">
+        <h2>Add Trolley ESL</h2>
+        <form id="addTrolleyForm" method="post">
+            {% csrf_token %}
+            <label for="mac">MAC:</label>
+            <input type="text" id="mac" name="mac" required>
+            <br>
+            <label for="trolleyCode">Trolley Code:</label>
+            <input type="text" id="trolleyCode" name="trolley_code" required>
+            <br>
+            <label for="asnNum">ASN Number:</label>
+            <input type="text" id="asnNum" name="asn_num" required>
+            <br>
+            <label for="color">Color:</label>
+            <input type="text" id="color" name="color" required>
+            <br>
+            <label for="status">Status:</label>
+            <select id="status" name="trolley_picking_status">
+                <option value="completed">Completed</option>
+                <option value="pending">Pending</option>
+                
+            </select>
+            <br>
+            <button type="button" onclick="addTrolleyEsl()">Add Trolley ESL</button>
+        </form>
+    </div>
+    
+</div>
+<script>
+    function addTrolleyEsl() {
+        var formData = new FormData(document.getElementById('addTrolleyForm'));
+        var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        fetch('{% url "add_trolley_esl" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Trolley ESL added successfully.");
+                location.reload();
+            } else {
+                alert("Failed to add Trolley ESL: " + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("An error occurred. Please try again.");
+        });
+    }
+</script>
+
+{% endblock %}

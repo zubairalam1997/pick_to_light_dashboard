@@ -18,6 +18,7 @@ import openpyxl
 from django.core.files.storage import FileSystemStorage
 from django.views.decorators.http import require_http_methods
 from django.db import transaction
+import os
 
 # Initialize an in-memory queue
 pending_data_queue = defaultdict(list)
@@ -196,6 +197,7 @@ def get_Payload_Data(request):
                         response = requests.post('http://192.168.1.100/wms/associate/updateScreen', json=data_list)
                         response.raise_for_status()
                         if response.ok:
+                            messages.success(request, 'Plan set to Kitting in Process.')
                             posted_vc = vc_number
                             try:
                                 vc_n_asn_entry = vc_n_asn.objects.get(vcn=posted_vc)
@@ -710,7 +712,21 @@ def vc_list(request):
     vcs = EslPart.objects.all()
     vc_masters = VcMaster.objects.all()
     return render(request, 'model_matrix.html', {'vcs': vcs, 'vc_masters': vc_masters})
+
+def Part_VC_Map_Data(request):
+    vcs = EslPart.objects.all()
+    vc_masters = VcMaster.objects.all()
+    return render(request,  "model_matrix/vc_part_map.html", {'vcs': vcs, 'vc_masters': vc_masters})
     
+def add_esl_part_template(request):
+    return render(request, 'model_matrix/add_esl.html')   
+
+def add_new_trolley_template(request):
+    return render(request, 'model_matrix/add_new_trolley.html')  
+def vc_model_mapping_template(request):
+    vc_masters = VcMaster.objects.all()
+    return render(request, 'model_matrix/vc_model_mapping.html' ,{'vc_masters':vc_masters}) 
+
 def fetch_existing_vc_entries(request):
     part_no = request.GET.get('part_no')
     if part_no:
@@ -719,61 +735,72 @@ def fetch_existing_vc_entries(request):
     
     return JsonResponse([], safe=False)
 
+
 def update_vc(request):
+    print(f"Request method: {request.method}")
     if request.method == 'POST':
         vc_id = request.POST.get('vc_id')
         part_number = request.POST.get('part_number')
         part_desc = request.POST.get('part_desc')
         quantity = request.POST.get('quantity')
-        selected_vc_ids = request.POST.getlist('vc_master_id')
+        selected_vc_ids = request.POST.getlist('vc_master_id[]')  # Use getlist to fetch multiple selected IDs
+
+        print("Selected VC IDs:", selected_vc_ids)
 
         try:
             existing_vc_entries = VcDatabase.objects.filter(part_no=part_number)
-            existing_vc_ids = existing_vc_entries.values_list('vc_no', flat=True)
+            existing_vc_ids = list(existing_vc_entries.values_list('vc_no', flat=True))
 
-            selected_vc_numbers = VcMaster.objects.filter(id__in=selected_vc_ids).values_list('vcnumber', flat=True)
+            selected_vc_numbers = list(VcMaster.objects.filter(id__in=selected_vc_ids).values_list('vcnumber', flat=True))
 
             # Create or update entries for checked items
+            created_items = []
             for vc_id in selected_vc_ids:
                 vc_master = VcMaster.objects.get(id=vc_id)
+                print("Processing VC Master:", vc_master)
+
                 if vc_master.vcnumber not in existing_vc_ids:
-                    VcDatabase.objects.create(
+                    created_item = VcDatabase.objects.create(
                         vc_no=vc_master.vcnumber,
                         part_no=part_number,
                         part_desc=part_desc,
                         quantity=quantity
                     )
-                    toastr.success('New VC entry added successfully.')
+                    created_items.append(created_item)
+                    print("Created items:", created_items)
                 else:
                     vc_entry = VcDatabase.objects.get(vc_no=vc_master.vcnumber, part_no=part_number)
                     if vc_entry.quantity != int(quantity):
                         vc_entry.quantity = quantity
                         vc_entry.save()
+                        print(f"Updated VC entry: {vc_entry.vc_no} with quantity: {vc_entry.quantity}")
                         # Update quantity in EslPart if the quantity has changed
                         try:
                             esl_part = EslPart.objects.get(part_no=part_number)
                             if esl_part.quantity != int(quantity):
                                 esl_part.quantity = quantity
                                 esl_part.save()
+                                print(f"Updated ESL part: {esl_part.partno} with quantity: {esl_part.quantity}")
                         except EslPart.DoesNotExist:
-                            EslPart.objects.create(part_no=part_number, quantity=quantity)
+                            EslPart.objects.create(partno=part_number, quantity=quantity)
+                            print(f"Created new ESL part: {part_number} with quantity: {quantity}")
 
             # Delete entries for unchecked items
             for vc_entry in existing_vc_entries:
                 if vc_entry.vc_no not in selected_vc_numbers:
                     vc_entry.delete()
-                    toastr.warning(f'VC entry {vc_entry.vc_no} deleted.')
+                    print(f"Deleted VC entry: {vc_entry.vc_no}")
 
             # Show success message and redirect
             messages.success(request, 'VC entries updated successfully.')
-            return redirect('vc_list')
+            return JsonResponse({'status': 'success', 'message': 'VC entries updated successfully.'})
 
         except Exception as e:
             # Handle exceptions and show error message
             messages.error(request, f'Error updating VC entries: {str(e)}')
-            return redirect('vc_list')  # Redirect to vc_list or handle as per your app's logic
+            return JsonResponse({'status': 'error', 'message': f'Error updating VC entries: {str(e)}'})
 
-    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'})   
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'})
 def edit_vc(request, id):
     vc = get_object_or_404(VcDatabase, id=id)
     if request.method == "POST":
@@ -804,6 +831,65 @@ import openpyxl
 from .models import VcDatabase
 
 logger = logging.getLogger(__name__)
+
+@csrf_exempt
+def add_esl_part(request):
+    if request.method == 'POST':
+        try:
+            part_no = request.POST.get('part_no')
+            tag_mac = request.POST.get('tagId')
+            part_desc = request.POST.get('part_desc')
+            quantity = request.POST.get('quantity')
+
+            if not part_no or not part_desc or not quantity:
+                return JsonResponse({'success': False, 'message': 'All fields are required.'})
+
+            EslPart.objects.create(
+                   # Adjust as needed
+                partno=part_no,
+                part_desc=part_desc,
+                tagid = tag_mac,
+                quantity=quantity
+            )
+
+            return JsonResponse({'success': True, 'message': 'ESL Part added successfully.'})
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': f'Error: {e}'})
+
+    return JsonResponse({'success': False, 'message': 'Invalid request method.'})
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from openpyxl import load_workbook
+
+@csrf_exempt
+def upload_esl_excel(request):
+    if request.method == 'POST' and request.FILES.get('excel_file'):
+        excel_file = request.FILES['excel_file']
+        try:
+            wb = load_workbook(filename=excel_file, data_only=True)
+            sheet = wb.active
+            for row in sheet.iter_rows(min_row=2, values_only=True):  # Assuming the first row is the header
+                partno = row[0]
+                part_desc = row[1]
+                tagid = row[2]
+                quantity = row[3]
+                
+                if partno and part_desc and tagid and quantity is not None:  # Validate values
+                    EslPart.objects.update_or_create(
+                        partno=partno,
+                        defaults={
+                            'part_desc': part_desc,
+                            'tagid': tagid,
+                            'quantity': quantity
+                        }
+                    )
+            return JsonResponse({'success': True, 'message': 'ESL Excel uploaded and data updated successfully.'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': f'Error processing Excel file: {e}'})
+    return JsonResponse({'success': False, 'message': 'No file uploaded or invalid request method.'})
+
 
 @csrf_exempt
 @require_http_methods(["POST"])
@@ -889,3 +975,61 @@ def user_login(request):
 def user_logout(request):
     logout(request)
     return redirect('')
+
+def download_sample_excel(request):
+    filepath = os.path.join(os.path.dirname(__file__), 'sample.xlsx')
+    with open(filepath, 'rb') as file:
+        response = HttpResponse(file.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename=sample.xlsx'
+        return response
+
+@require_http_methods(["DELETE"])
+@csrf_exempt
+def delete_vc_master(request, id):
+    try:
+        vc_master = VcMaster.objects.get(id=id)
+        vc_num=vc_master.vcnumber
+        # Delete related VC entries
+        VcDatabase.objects.filter(vc_no=vc_num).delete()
+        # Delete the VC master entry
+        vc_master.delete()
+        return JsonResponse({'success': True})
+    except VcMaster.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'VC Master entry not found.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+def add_vc_master(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        vcnumber = data.get('vcnumber')
+        model = data.get('model')
+        if vcnumber and model:
+            new_vc_master = VcMaster(vcnumber=vcnumber, model=model)
+            new_vc_master.save()
+            return JsonResponse({'success': True, 'id': new_vc_master.id})
+        else:
+            return JsonResponse({'success': False}, status=400)
+
+def add_trolley_esl(request):
+    if request.method == 'POST':
+        mac = request.POST.get('mac')
+        trolley_code = request.POST.get('trolley_code')
+        asn_num = request.POST.get('asn_num')
+        color = request.POST.get('color')
+        trolley_picking_status = request.POST.get('trolley_picking_status')
+
+        try:
+            trolley_data.objects.create(
+                mac=mac,
+                trolley_code=trolley_code,
+                asn_num=asn_num,
+                color=color,
+                trolley_picking_status=trolley_picking_status
+            )
+            return JsonResponse({'success': True, 'message': 'Trolley ESL added successfully.'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': f'Error adding Trolley ESL: {e}'})
+    return JsonResponse({'success': False, 'message': 'Invalid request method.'})
+
+def base_model_matrix(request):
+    return render(request ,"model_matrix/base_model_matrix.html") 

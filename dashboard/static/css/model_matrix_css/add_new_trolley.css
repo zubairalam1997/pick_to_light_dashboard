@@ -1,0 +1,45 @@
+/* Container */
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    background-color: #fefefe;
+}
+
+/* Form labels */
+.container label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+/* Form inputs */
+.container input[type="text"],
+.container select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+/* Form buttons */
+.container button {
+    background-color: rgb(5, 170, 5);
+    color: white;
+    padding: 10px 20px;
+    margin: 10px 0;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    font-size: large;
+    border-radius: 4px;
+}
+
+.container button:hover {
+    background-color: rgb(4, 140, 4);
+}

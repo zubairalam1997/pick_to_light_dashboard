@@ -1,0 +1,53 @@
+body{
+    margin: 0;
+    padding: 0;
+}
+.model_matrix_head{
+    display: block;
+    background: rgb(128, 128, 128);
+    
+}
+/* Navigation menu styles */
+
+.model_matrix_head ul {
+    list-style-type: none; /* Remove bullet points */
+    padding: 0; /* Remove default padding */
+    margin: 0; /* Remove default margin */
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height: 2.5rem;
+    width: 100%;
+   
+}
+
+.model_matrix-item {
+    /* Display list items inline */
+    display: inline-block; /* Display list items inline */
+    padding: 10px;
+    background: #f25f02;
+    flex-grow: 1; /* Make list-item acquire all remaining space */
+    text-align: center; /* Center the text horizontally */
+    border: 1px solid transparent;
+    
+}
+
+.model_matrix-item:hover,
+.model_matrix-item:active,
+.model_matrix-item:focus {
+    border: 1px solid #fff;
+    background: #3552f7; /* Add border on hover, click, and focus */
+    color: #fff;
+}
+
+.model_matrix-item a {
+    text-decoration: none; /* Remove underline from links */
+    color: #fff; /* White text color */
+    font-weight: 800;
+}
+
+/* CSS file */
+.list-item:hover a {
+    color: #fff;  /* Change anchor tag color to white when hovering over list item */
+    text-decoration: none;  /* Remove underline decoration */
+}

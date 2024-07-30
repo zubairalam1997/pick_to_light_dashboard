@@ -1,4 +1,4 @@
-{%extends 'base.html'%}
+{% extends 'base.html' %}
 {% block content %}
 <!DOCTYPE html>
 <html lang="en">
@@ -77,12 +77,16 @@
 </head>
 <body>
     <h1>VC Model Matrix</h1>
-     <!-- Upload Form -->
-     <form id="uploadForm" method="post" action="{% url 'upload_excel' %}" enctype="multipart/form-data">
+    <!-- Upload Form -->
+    <form id="uploadForm" method="post" action="{% url 'upload_excel' %}" enctype="multipart/form-data">
         {% csrf_token %}
         <input type="file" name="excel_file" accept=".xlsx, .xls">
-        <button type="button" onclick="uploadFile()">Upload Excel</button>
+        <button type="button"style="border: 1px solid whitesmoke ;padding: 3px; font-size: large; background-color: rgb(5, 170, 5); height: 2rem; border-radius: 4px; color: #fefefe;"  onclick="uploadFile()">Upload Excel</button>
+        <button style="border: 1px solid whitesmoke ;padding: 3px; font-size: large; background-color: rgb(5, 170, 5); height: 2rem; border-radius: 4px; color: #fefefe;"type="button" onclick="window.location.href='{% url 'download_sample_excel' %}'" > Sample .XLSX</button>
+   
     </form>
+    <!-- Download Sample Excel Button -->
+    
     <table>
         <thead>
             <tr>
@@ -91,7 +95,7 @@
                 <th>Part No</th>
                 <th>Part Description</th>
                 <th>Quantity</th>
-                <th>Actions</th>
+                <th>Part and VC Mapping</th>
             </tr>
         </thead>
         <tbody>
@@ -111,7 +115,104 @@
         </tbody>
     </table>
 
-    <!-- The Modal -->
+    <!-- Button to open VC Master List Modal -->
+    <button style="border: 1px solid whitesmoke ;padding: 3px; font-size: large; background-color: rgb(5, 170, 5); height: 2rem; border-radius: 4px; color: #fefefe;" type="button" onclick="openVCMasterModal()">Update VC-Modeldescription </button>
+    
+    <!-- Button to open the Add ESL Part Modal -->
+    <button id="addEslPartButton">Add ESL Part</button>
+
+    <!-- Add ESL Part Modal -->
+    <div id="addEslPartModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('addEslPartModal')">&times;</span>
+            <h2>Add ESL Part</h2>
+            <form id="addPartForm" method="post">
+                {% csrf_token %}
+                <label for="newPartNumber">Part Number:</label>
+                <input type="text" id="newPartNumber" name="part_no" required>
+                <br>
+                <label for="tagId">Tag Id:</label>
+                <input type="text" id="tagId" name="tagId" required>
+                <br>
+                <label for="newPartDesc">Part Description:</label>
+                <input type="text" id="newPartDesc" name="part_desc" required>
+                <br>
+                <label for="newQuantity">Quantity:</label>
+                <input type="number" id="newQuantity" name="quantity" required>
+                <br>
+                <button type="button" onclick="addEslPart()">Add ESL Part</button>
+                <br>
+            <label for="eslExcelFile">Upload Excel File:</label>
+            <input type="file" id="eslExcelFile" name="excel_file" accept=".xlsx, .xls">
+            <button type="button" onclick="uploadEslExcel()">Upload Excel</button>
+            </form>
+        </div>
+        
+    </div>
+
+        <!-- Button to open the Add Trolley ESL Modal -->
+    <button id="addTrolleyEslButton" style="border: 1px solid whitesmoke; padding: 3px; font-size: large; background-color: rgb(5, 170, 5); height: 2rem; border-radius: 4px; color: #fefefe;">Add Trolley ESL</button>
+
+    <!-- Add Trolley ESL Modal -->
+    <div id="addTrolleyEslModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('addTrolleyEslModal')">&times;</span>
+            <h2>Add Trolley ESL</h2>
+            <form id="addTrolleyForm" method="post">
+                {% csrf_token %}
+                <label for="mac">MAC:</label>
+                <input type="text" id="mac" name="mac" required>
+                <br>
+                <label for="trolleyCode">Trolley Code:</label>
+                <input type="text" id="trolleyCode" name="trolley_code" required>
+                <br>
+                <label for="asnNum">ASN Number:</label>
+                <input type="text" id="asnNum" name="asn_num" required>
+                <br>
+                <label for="color">Color:</label>
+                <input type="text" id="color" name="color" required>
+                <br>
+                <label for="status">Status:</label>
+                <select id="status" name="trolley_picking_status">
+                    <option value="pending">Pending</option>
+                    <option value="completed">Completed</option>
+                </select>
+                <br>
+                <button type="button" onclick="addTrolleyEsl()">Add Trolley ESL</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- VC Master List Modal -->
+    <div id="vcMasterModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeVCMasterModal()">&times;</span>
+            <h2>VC Master List</h2>
+            <button type="button" onclick="addVCMasterEntry()">Add New Entry</button>
+            <table>
+                <thead>
+                    <tr>
+                        <th>VC Number</th>
+                        <th>Model Description</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="vcMasterTableBody">
+                    {% for vc_master in vc_masters %}
+                    <tr data-id="{{ vc_master.id }}">
+                        <td>{{ vc_master.vcnumber }}</td>
+                        <td>{{ vc_master.model }}</td>
+                        <td class="action-buttons">
+                            <a href="#" class="delete" onclick="deleteVCMasterEntry(this, {{ vc_master.id }})">Delete</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- The Modal for Editing VC Entries -->
     <div id="myModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
@@ -153,14 +254,66 @@
     </div>
 
     <script>
-        // Get the modal
+        // Get the modals
         var modal = document.getElementById("myModal");
+        var vcMasterModal = document.getElementById("vcMasterModal");
 
-        // Get the button that opens the modal
+        // Get the buttons that open the modals
         var btns = document.getElementsByClassName("edit-button");
+        
+        var addEslPartButton = document.getElementById('addEslPartButton');
+        var addEslPartModal = document.getElementById('addEslPartModal');
+        var closeButtons = document.getElementsByClassName('close');
 
-        // Get the <span> element that closes the modal
-        var span = document.getElementsByClassName("close")[0];
+        addEslPartButton.onclick = function() {
+            addEslPartModal.style.display = "block";
+        };
+
+        for (var i = 0; i < closeButtons.length; i++) {
+            closeButtons[i].onclick = function() {
+                closeModal(this.parentElement.parentElement.id);
+            };
+        }
+
+        window.onclick = function(event) {
+            if (event.target == addEslPartModal) {
+                addEslPartModal.style.display = "none";
+            }
+        };
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = "none";
+        }
+
+        function addEslPart() {
+            var formData = new FormData(document.getElementById('addPartForm'));
+            var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            fetch('{% url "add_esl_part" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("ESL Part added successfully.");
+                    location.reload();
+                } else {
+                    alert("Failed to add ESL Part: " + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("An error occurred. Please try again.");
+            });
+        }
+
+
+        // Get the <span> elements that close the modals
+        var spans = document.getElementsByClassName("close");
 
         // When the user clicks the button, open the modal 
         for (var i = 0; i < btns.length; i++) {
@@ -177,17 +330,17 @@
 
                 // Print part number in console
                 console.log("Fetching existing VC entries for part_no:", partNo);
-// Uncheck all checkboxes first
-var allCheckboxes = document.querySelectorAll("input[type='checkbox']");
-                    allCheckboxes.forEach(checkbox => checkbox.checked = false);
-// Fetch existing entries for the part number and check the corresponding checkboxes
-fetch(`/fetch-existing-vc-entries/?part_no=${encodeURIComponent(partNo)}`)
-    .then(response => response.json())
-    .then(data => {
-        // Print received data in console
-        console.log("Received data:", data);
+                // Uncheck all checkboxes first
+                var allCheckboxes = document.querySelectorAll("input[type='checkbox']");
+                allCheckboxes.forEach(checkbox => checkbox.checked = false);
+                // Fetch existing entries for the part number and check the corresponding checkboxes
+                fetch(`/fetch-existing-vc-entries/?part_no=${encodeURIComponent(partNo)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Print received data in console
+                        console.log("Received data:", data);
 
-        var rows = document.querySelectorAll("table tbody tr");
+                        var rows = document.querySelectorAll("table tbody tr");
                         rows.forEach(row => {
                             var vcNo = row.cells[1].innerText; // Assuming the VC number is in the second column
                             if (data.includes(vcNo)) {
@@ -197,22 +350,29 @@ fetch(`/fetch-existing-vc-entries/?part_no=${encodeURIComponent(partNo)}`)
                                 }
                             }
                         });
-    })
-    .catch(error => console.error('Error:', error));
+                    })
+                    .catch(error => console.error('Error:', error));
                 modal.style.display = "block";
             };
         }
+
         // When the user clicks on <span> (x), close the modal
-        span.onclick = function() {
-            modal.style.display = "none";
-        };
+        for (var i = 0; i < spans.length; i++) {
+            spans[i].onclick = function() {
+                modal.style.display = "none";
+                vcMasterModal.style.display = "none";
+            };
+        }
 
         // When the user clicks anywhere outside of the modal, close it
         window.onclick = function(event) {
-            if (event.target == modal) {
+            if (event.target == modal || event.target == vcMasterModal) {
                 modal.style.display = "none";
+                vcMasterModal.style.display = "none";
             }
         };
+        
+        
         function deleteRow(button) {
             // Get the row of the clicked button
             var row = button.parentNode.parentNode;
@@ -244,7 +404,8 @@ fetch(`/fetch-existing-vc-entries/?part_no=${encodeURIComponent(partNo)}`)
                 });
             }
         }
-         function uploadFile() {
+
+        function uploadFile() {
             var formData = new FormData(document.getElementById('uploadForm'));
             var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
             var messageDiv = document.getElementById('message');
@@ -268,7 +429,40 @@ fetch(`/fetch-existing-vc-entries/?part_no=${encodeURIComponent(partNo)}`)
                 messageDiv.innerHTML = `<div style="color: red;">An error occurred: ${error}</div>`;
             });
         }
-        
+
+        addEslPartButton.onclick = function() {
+    addEslPartModal.style.display = "block";
+};
+
+function uploadEslExcel() {
+    var formData = new FormData();
+    var fileInput = document.getElementById('eslExcelFile');
+    var file = fileInput.files[0];
+    var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    formData.append('excel_file', file);
+    formData.append('csrfmiddlewaretoken', csrfToken);
+
+    fetch('{% url "upload_esl_excel" %}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("ESL Excel uploaded successfully.");
+            location.reload();
+        } else {
+            alert("Failed to upload ESL Excel: " + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert("An error occurred. Please try again.");
+    });
+}
+
+
         toastr.options = {
             "closeButton": true,
             "progressBar": true,
@@ -289,9 +483,148 @@ fetch(`/fetch-existing-vc-entries/?part_no=${encodeURIComponent(partNo)}`)
                 toastr.{{ message.tags }}('{{ message }}');
             {% endfor %}
         {% endif %}
+
+        function openVCMasterModal() {
+            vcMasterModal.style.display = "block";
+        }
+
+        function closeVCMasterModal() {
+            vcMasterModal.style.display = "none";
+        }
+
+       
+    function addVCMasterEntry() {
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+            <td><input type="text" placeholder="VC Number" id="newVCNumber"></td>
+            <td><input type="text" placeholder="Model Description" id="newModelDescription"></td>
+            <td class="action-buttons">
+                <a href="#" class="add" onclick="confirmAddVCMasterEntry(this)">Add</a>
+            </td>
+        `;
+        document.getElementById('vcMasterTableBody').appendChild(newRow);
+    }
+
+    function confirmAddVCMasterEntry(button) {
+        var row = button.parentNode.parentNode;
+        var vcNumber = row.querySelector("#newVCNumber").value.trim();
+        var modelDescription = row.querySelector("#newModelDescription").value.trim();
+
+        if (vcNumber && modelDescription) {
+            if (confirm("Are you sure you want to add this VC Master entry?")) {
+                fetch('/add_vc_master/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}' 
+                    },
+                    body: JSON.stringify({ vcnumber: vcNumber, model: modelDescription })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("VC Master entry added successfully.");
+
+                        // Update the row to display the new entry
+                        row.innerHTML = `
+                            <td>${vcNumber}</td>
+                            <td>${modelDescription}</td>
+                            <td class="action-buttons">
+                                <a href="#" class="delete" onclick="deleteVCMasterEntry(this, ${data.id})">Delete</a>
+                            </td>
+                        `;
+
+                        // Add the new entry to the modal
+                        const modalRow = document.createElement('tr');
+                        modalRow.innerHTML = `
+                            <td><input type="checkbox" name="vc_master_id" value="${data.id}"></td>
+                            <td>${vcNumber}</td>
+                            <td>${modelDescription}</td>
+                        `;
+                        document.querySelector('#myModal tbody').appendChild(modalRow);
+                    } else {
+                        alert("Failed to add VC Master entry.");
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("An error occurred. Please try again.");
+                });
+            }
+        } else {
+            alert("VC Number and Model Description cannot be empty.");
+        }
+    }
+
+    function deleteVCMasterEntry(button, id) {
+        if (confirm("Are you sure you want to delete this VC Master entry?")) {
+            fetch(`/delete_vc_master/${id}/`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    var row = button.parentNode.parentNode;
+                    row.parentNode.removeChild(row);
+                    alert("VC Master entry deleted successfully.");
+
+                    // Remove the entry from the modal
+                    document.querySelectorAll('#myModal tbody tr').forEach(modalRow => {
+                        if (modalRow.querySelector(`input[name="vc_master_id"][value="${id}"]`)) {
+                            modalRow.parentNode.removeChild(modalRow);
+                        }
+                    });
+                } else {
+                    alert("Failed to delete VC Master entry.");
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("An error occurred. Please try again.");
+            });
+        }
+    }
+
+    function addTrolleyEsl() {
+            var mac = document.getElementById('mac').value;
+            var trolleyCode = document.getElementById('trolleyCode').value;
+            var asnNum = document.getElementById('asnNum').value;
+            var color = document.getElementById('color').value;
+            var status = document.getElementById('status').value;
+            var csrfToken = document.getElementsByName('csrfmiddlewaretoken')[0].value;
+
+            $.ajax({
+                type: 'POST',
+                url: '{% url "add_trolley_esl" %}',
+                data: {
+                    mac: mac,
+                    trolley_code: trolleyCode,
+                    asn_num: asnNum,
+                    color: color,
+                    trolley_picking_status: status,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function (response) {
+                    if (response.success) {
+                        toastr.success(response.message);
+                        closeModal('addTrolleyEslModal');
+                        location.reload(); // Reload the page to see the new entry
+                    } else {
+                        toastr.error(response.message);
+                    }
+                },
+                error: function () {
+                    toastr.error('An error occurred while adding the Trolley ESL.');
+                }
+            });
+        }
+
+
+
     </script>
-    
 </body>
 </html>
-
 {% endblock %}

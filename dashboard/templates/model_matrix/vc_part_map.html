@@ -1,0 +1,177 @@
+{% extends 'model_matrix/base_model_matrix.html' %}
+
+{% block content %}
+{%load static%}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VC Database List</title>
+    <link rel="stylesheet" href="{% static 'css/model_matrix_css/vc_part_map.css' %}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+</head>
+<body>
+    <h2>Upload Excel to Map Part number with VC</h2>
+    <form id="uploadForm" method="post" action="{% url 'upload_excel' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="excel_file" accept=".xlsx, .xls">
+        <button type="button" class="upload-excel-btn" onclick="uploadFile()">Click to Upload Excel</button>
+        <button class="sample-exl-btn" type="button" onclick="window.location.href='{% url 'download_sample_excel' %}'">Download Sample .XLSX</button>
+    </form>
+    <h3 class="h3-heading">OR</h3>
+    <h2>Click Edit to map part number with VC</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Sno.</th>
+                <th>Part No</th>
+                <th>Part Description</th>
+                <th>Quantity</th>
+                <th>Part and VC Mapping</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vc in vcs %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ vc.partno }}</td>
+                <td>{{ vc.part_desc }}</td>
+                <td>{{ vc.quantity }}</td>
+                <td class="action-buttons">
+                    <a href="#" class="edit-button" data-id="{{ vc.id }}">Edit</a>
+                    <a href="#" class="delete" data-partno="{{ vc.partno }}" onclick="deleteRow(this)">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <!-- The Modal for Editing VC Entries -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Edit VC Entry model matrix</h2>
+            <form id="editForm" method="post" action="{% url 'update_vc' %}">
+                {% csrf_token %}
+                <input type="hidden" id="vcId" name="vc_id" value="">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Checkbox</th>
+                            <th>VC Number</th>
+                            <th>Model Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for vc_master in vc_masters %}
+                        <tr>
+                            <td><input type="checkbox" name="vc_master_id[]" value="{{ vc_master.id }}"></td>
+                            <td>{{ vc_master.vcnumber }}</td>
+                            <td>{{ vc_master.model }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <br>
+                <label for="partNumber">Part Number:</label>
+                <input type="text" id="partNumber" name="part_number" readonly>
+                <br><br>
+                <label for="partDesc">Part Description:</label>
+                <input type="text" id="partDesc" name="part_desc" readonly>
+                <br><br>
+                <label for="quantity">Quantity:</label>
+                <input type="number" id="quantity" name="quantity">
+                <br><br>
+                <button type="submit">Update</button>
+            </form>
+        </div>
+    </div>
+    <script>
+        var modal = document.getElementById("myModal");
+        var vcMasterModal = document.getElementById("vcMasterModal");
+        var closeButtons = document.getElementsByClassName('close');
+        for (var i = 0; i < closeButtons.length; i++) {
+            closeButton = closeButtons[i];
+            closeButton.addEventListener('click', function() {
+                var modal = document.getElementsByClassName('modal')[0];
+                modal.style.display = 'none';
+            });
+        }
+        var btns = document.getElementsByClassName("edit-button");
+        for (var i = 0; i < btns.length; i++) {
+            btns[i].onclick = function() {
+                var vcId = this.getAttribute("data-id");
+                document.getElementById("vcId").value = vcId;
+                var row = this.parentNode.parentNode;
+                var partNo = row.cells[1].innerText;
+                var partDesc = row.cells[2].innerText;
+                var quantity = row.cells[3].innerText;
+                document.getElementById("partNumber").value = partNo;
+                document.getElementById("partDesc").value = partDesc;
+                document.getElementById("quantity").value = quantity;
+                console.log("Fetching existing VC entries for part_no:", partNo);
+                var allCheckboxes = document.querySelectorAll("input[type='checkbox']");
+                allCheckboxes.forEach(checkbox => checkbox.checked = false);
+                fetch(`/fetch-existing-vc-entries/?part_no=${encodeURIComponent(partNo)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log("Received data:", data);
+                        var rows = document.querySelectorAll("table tbody tr");
+                        rows.forEach(row => {
+                            var vcNo = row.cells[1].innerText;
+                            if (data.includes(vcNo)) {
+                                var checkbox = row.querySelector("input[type='checkbox']");
+                                if (checkbox) {
+                                    checkbox.checked = true;
+                                }
+                            }
+                        });
+                    })
+                    .catch(error => console.error('Error:', error));
+                modal.style.display = "block";
+            };
+        }
+        window.onclick = function(event) {
+            if (event.target == modal || event.target == vcMasterModal) {
+                modal.style.display = "none";
+                vcMasterModal.style.display = "none";
+            }
+        };
+        function deleteRow(button) {
+            var row = button.parentNode.parentNode;
+            var partNumber = row.cells[2].innerText;
+            if (confirm("Are you sure you want to delete part number " + partNumber + "?")) {
+                fetch(`/delete_vc/${partNumber}/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        row.parentNode.removeChild(row);
+                        alert("Part number " + partNumber + " deleted successfully.");
+                    } else {
+                        alert("Failed to delete part number " + partNumber);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("An error occurred. Please try again.");
+                });
+            }
+        }
+        function openVCMasterModal() {
+            vcMasterModal.style.display = "block";
+        }
+        function closeVCMasterModal() {
+            vcMasterModal.style.display = "none";
+        }
+    </script>
+</body>
+</html>
+{% endblock %}
