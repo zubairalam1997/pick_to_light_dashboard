@@ -1,0 +1,153 @@
+<div id="messages"></div>
+<script>
+    function fetchMessages() {
+        fetch('/get-messages/')  
+            .then(response => response.json())
+            .then(data => {
+                const messagesContainer = document.getElementById('messages');
+                messagesContainer.innerHTML = '';  // Clear previous messages
+                data.messages.forEach(msg => {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = `message ${getMessageClass(msg.level)}`;
+                    messageDiv.innerText = msg.message;
+                    messagesContainer.appendChild(messageDiv);
+                    console.log(msg.level)
+                });
+                // Show messages
+                const messages = document.querySelectorAll('.message');
+                messages.forEach(message => {
+                    message.style.display = 'block';
+                    setTimeout(() => {
+                        message.style.display = 'none';
+                    }, 3000);  // Hide message after 3 seconds
+                });
+            });
+    }
+
+    function getMessageClass(level) {
+        switch (level) {
+            case 10: return 'debug';
+            case 20: return 'info';
+            case 25: return 'success';
+            case 30: return 'warning';
+            case 40: return 'error';
+            default: return '';
+        }
+    }
+
+    // Fetch messages every 5 seconds
+    setInterval(fetchMessages, 5000);
+</script>
+
+<style>
+    .message {
+        display: none;
+        padding: 10px;
+        margin: 10px 0;
+    }
+    .message.success { background-color: #d4edda; color: #155724; }
+    .message.warning { background-color: lightyellow;
+        color: rgb(255, 98, 0);
+        border: 2px solid rgb(255, 98, 0);
+        border-radius: 5px;
+        padding: 10px;
+        margin-bottom: 10px; }
+    .message.error { background-color: #f8d7da; color: #721c24; }
+    #message-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        display: block;
+        border-radius: 5px;
+        margin: 0;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        max-width: 500px;
+    }
+    .alert-success {
+        background-color: lightgreen;
+        color: green;
+        border: 2px solid green;
+        border-radius: 5px;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+    .alert-warning {
+        background-color: lightyellow;
+        color: rgb(255, 98, 0);
+        border: 2px solid rgb(255, 98, 0);
+        border-radius: 5px;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+    .alert-error {
+        background-color: lightcoral;
+        color: red;
+        border: 2px solid red;
+        border-radius: 5px;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+</style>
+
+
+
+<!-- 
+{% if messages %}
+<div id="message-container">
+    {% for message in messages %}
+        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+            {{ message }}
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const messageContainer = document.getElementById('message-container');
+        if (messageContainer) {
+            setTimeout(() => {
+                messageContainer.style.display = 'none';
+            }, 3000);
+        }
+    });
+</script>
+
+<style>
+    #message-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        display: block;
+        border-radius: 5px;
+        margin: 0;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        max-width: 500px;
+    }
+    .alert-success {
+        background-color: lightgreen;
+        color: green;
+        border: 2px solid green;
+        border-radius: 5px;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+    .alert-warning {
+        background-color: lightyellow;
+        color: rgb(255, 98, 0);
+        border: 2px solid rgb(255, 98, 0);
+        border-radius: 5px;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+    .alert-error {
+        background-color: lightcoral;
+        color: red;
+        border: 2px solid red;
+        border-radius: 5px;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+</style> -->

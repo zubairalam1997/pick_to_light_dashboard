@@ -45,6 +45,14 @@ def display_color():
 global vc_number
 posted_vc = None
 
+from django.contrib.messages import get_messages
+
+
+@csrf_exempt
+def get_messages_view(request):
+    storage = get_messages(request)
+    messages = [{'level': message.level, 'message': message.message} for message in storage]
+    return JsonResponse({'messages': messages})
 
 @csrf_exempt
 def get_combined_data(request):
@@ -161,6 +169,7 @@ def get_Payload_Data(request):
             matching_trolley = trolley_data.objects.filter(trolley_code=qr_data).first()
 
             if matching_trolley and matching_trolley.trolley_picking_status == "pending":
+                messages.warning(request , 'This trolley is already engaged!')
                 return JsonResponse({'error': 'This trolley is already engaged'}, status=400)
             
             if matching_trolley and matching_trolley.trolley_picking_status == "completed":

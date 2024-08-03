@@ -9,7 +9,26 @@
 <div class="center">
     <div class="container" style="margin: auto; margin-top: 45px;">
         <h2>VC Master List</h2>
-        <button type="button" onclick="addVCMasterEntry()">Add New Entry</button>
+        <div class="btn-list" style="display: flex;">
+
+            <button type="button" onclick="addVCMasterEntry()">Add New Entry</button> 
+            
+            <!-- <span style="margin: auto;"><h3 style="padding-bottom: 4px;">OR</h3></span>
+        <form id="uploadForm" method="post" action="{% url 'upload_excel' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="file" name="excel_file" style=" 
+                
+                padding: 9px;
+                margin-bottom: 10px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                box-sizing: border-box;
+            " accept=".xlsx, .xls">
+            <button type="button" class="upload-excel-btn" onclick="uploadFile()">Click to Upload Excel</button>
+            <button class="sample-exl-btn" type="button" onclick="window.location.href='*'">Download Sample .XLSX</button>
+        </form> -->
+       
+    </div>
         <table>
             <thead>
                 <tr>
