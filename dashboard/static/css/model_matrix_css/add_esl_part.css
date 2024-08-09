@@ -46,3 +46,24 @@
 .container button:hover {
     background-color: rgb(4, 140, 4);
 }
+
+.button-container {
+    display: flex;
+    gap: 10px;
+}
+.button-container button,
+.button-container a {
+    flex: 1;
+}
+.button-container a {
+    display: inline-block;
+}
+.button-container a button {
+    width: 100%;
+}
+.or-divider {
+    text-align: center;
+    margin: 10px 0;
+    font-size: larger;
+    font-weight: 400;
+}

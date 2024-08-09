@@ -31,8 +31,12 @@ html, body {
     margin-bottom: 20px;
 }
 
+
 .container button:hover {
     background-color: #004099;
+}
+.button-container a{
+    text-decoration: none;
 }
 
 .container table {
@@ -63,4 +67,21 @@ html, body {
 
 .container .action-buttons a.delete:hover {
     text-decoration: underline;
+}
+
+.exl-container label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+
+/* Style for the input field */
+input[type="file"] {
+    border: 2px solid #007BFF; /* Blue border color */
+    border-radius: 5px; /* Rounded corners */
+    padding: 8px; /* Padding inside the input */
+    width: 100%; /* Full width */
+    box-sizing: border-box; /* Ensure padding does not exceed the width */
+    margin-top: 10px; /* Add some space above the input */
 }

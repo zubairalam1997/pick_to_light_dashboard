@@ -20,7 +20,9 @@
         {% csrf_token %}
         <input type="file" name="excel_file" accept=".xlsx, .xls">
         <button type="button" class="upload-excel-btn" onclick="uploadFile()">Click to Upload Excel</button>
-        <button class="sample-exl-btn" type="button" onclick="window.location.href='{% url 'download_sample_excel' %}'">Download Sample .XLSX</button>
+        <a href="{% static 'excel_files/sample.xlsx' %}" download>
+        <button class="sample-exl-btn" type="button">Download Sample .XLSX</button>
+    </a>
     </form>
     <h3 class="h3-heading">OR</h3>
     <h2>Click Edit to map part number with VC</h2>
@@ -142,7 +144,8 @@
         };
         function deleteRow(button) {
             var row = button.parentNode.parentNode;
-            var partNumber = row.cells[2].innerText;
+            var partNumber = row.cells[1].innerText;
+            
             if (confirm("Are you sure you want to delete part number " + partNumber + "?")) {
                 fetch(`/delete_vc/${partNumber}/`, {
                     method: 'DELETE',

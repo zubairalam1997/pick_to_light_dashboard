@@ -6,23 +6,52 @@
     <link rel="stylesheet" type="text/css" href="{% static 'css/model_matrix_css/add_new_trolley.css' %}">
 </head>
 
-<div class="trolley_template" style="margin-top: 100px; ">
+<div>
+    <div class="page-head" style="padding: 6px;">
+        <h2>Trolley Data</h2>
+    <button class="add-trolley-btn"  onclick="openModal()">Add New Trolley</button>
+    </div>
+<table>
+    <thead>
+        <tr>
+            <th>S.No</th>
+            <th>MAC</th>
+            <th>Trolley QR Number</th>
+            <th>Status</th>
+            <th>Actions</th>
+            
+        </tr>
+
+    </thead>
+    <tbody>
+        {%for trolley in all_trolley_tags %} 
+        <tr>
+            <td>{{forloop.counter}}</td>
+            <td>{{trolley.mac}}</td>
+            <td>{{trolley.trolley_code}}</td>
+            <td>{{trolley.trolley_picking_status}}</td>
+            <td>
+                <button class="del-btn" type="button" onclick="confirmDelete('{{ trolley.id }}')">Delete</button>
+            </td>
+
+        </tr>
+        {%endfor%}
+    </tbody>
+</table>
+<div id="modal" class="trolley_template" style="margin-top: 90px; ">
     <div class="container">
-        <h2>Add Trolley ESL</h2>
+        <span class="close"  id="close-btn" onclick="closeModal()">&times;</span>
+       <h2>Add Trolley ESL</h2> 
+           
         <form id="addTrolleyForm" method="post">
             {% csrf_token %}
             <label for="mac">MAC:</label>
             <input type="text" id="mac" name="mac" required>
             <br>
-            <label for="trolleyCode">Trolley Code:</label>
+            <label for="trolleyCode">Trolley QR Code:</label>
             <input type="text" id="trolleyCode" name="trolley_code" required>
             <br>
-            <label for="asnNum">ASN Number:</label>
-            <input type="text" id="asnNum" name="asn_num" required>
-            <br>
-            <label for="color">Color:</label>
-            <input type="text" id="color" name="color" required>
-            <br>
+           
             <label for="status">Status:</label>
             <select id="status" name="trolley_picking_status">
                 <option value="completed">Completed</option>
@@ -35,7 +64,53 @@
     </div>
     
 </div>
+</div>
 <script>
+    function openModal() {
+        document.getElementById('modal').style.display = "block";
+    }
+    function closeModal() {
+        document.getElementById('modal').style.display = "none";
+    }
+     // Close modal when clicking outside of it
+     window.onclick = function(event) {
+        var modal = document.getElementById('modal');
+        if (event.target == modal) {
+            closeModal();
+        }
+    }
+
+    function confirmDelete(trolleyId) {
+        if (confirm("Are you sure you want to delete this trolley?")) {
+            deleteTrolley(trolleyId);
+        }
+    }
+
+    function deleteTrolley(trolleyId) {
+        var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        fetch('{% url "delete_trolley_esl" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ 'id': trolleyId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Trolley deleted successfully.");
+                location.reload();
+            } else {
+                alert("Failed to delete trolley: " + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("An error occurred. Please try again.");
+        });
+    }
+
     function addTrolleyEsl() {
         var formData = new FormData(document.getElementById('addTrolleyForm'));
         var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;

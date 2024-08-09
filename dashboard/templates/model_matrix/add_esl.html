@@ -24,9 +24,17 @@
         <br>
         <button type="button" onclick="addEslPart()">Add ESL Part</button>
         <br>
+        <div class="or-divider">OR</div>
         <label for="eslExcelFile">Upload Excel File:</label>
         <input type="file" id="eslExcelFile" name="excel_file" accept=".xlsx, .xls">
+       <div class="button-container">
+        
+        <a href="{% static 'excel_files/new_esl_sample.xlsx' %}" download>
+            <button type="button">Download Sample Excel</button>
+        </a>
         <button type="button" onclick="uploadEslExcel()">Upload Excel</button>
+        
+       </div>
     </form>
 </div>
 
@@ -74,7 +82,7 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert("ESL Excel uploaded and data updated successfully.");
+                    alert(data.message);
                     location.reload();
                 } else {
                     alert("Failed to upload ESL Excel: " + data.message);

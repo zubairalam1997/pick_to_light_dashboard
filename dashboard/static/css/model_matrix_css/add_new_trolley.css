@@ -43,3 +43,73 @@
 .container button:hover {
     background-color: rgb(4, 140, 4);
 }
+.trolley_template{
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    padding-top: 60px;
+    background-color: rgb(0, 0, 0);
+            background-color: rgba(0, 0, 0, 0.4);
+}
+
+
+table {
+    width: 99%;
+    border-collapse: collapse;
+    margin: 5px;
+}
+table, th, td {
+    border: 1px solid black;
+}
+th, td {
+    padding: 8px;
+    text-align: left;
+}
+th {
+    background-color: #f2f2f2;
+}
+.action-buttons {
+    display: flex;
+    gap: 10px;
+}
+.td a {
+    text-decoration: none;
+    padding: 5px 10px;
+    color: white;
+    background-color: #007bff;
+    border-radius: 5px;
+}
+.del-btn {
+    background-color: #dc3545;
+    text-decoration: none;
+    padding: 5px 10px;
+    color: white;
+    border-radius: 5px;
+}
+
+.add-trolley-btn{
+    background-color: #0056b3;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    font-size: large;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+.close{
+    float: right;
+ font-size: xx-large;
+ font-weight: 500;
+ cursor: pointer;
+ padding-top: 5px;
+}
+.close:hover{
+    color: #dc3545;
+}

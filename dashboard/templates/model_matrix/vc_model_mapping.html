@@ -43,7 +43,11 @@
                     <td>{{ vc_master.vcnumber }}</td>
                     <td>{{ vc_master.model }}</td>
                     <td class="action-buttons">
-                        <a href="#" class="delete" onclick="deleteVCMasterEntry(this, {{ vc_master.id }})">Delete</a>
+                        <a href="#" class="delete" style="    text-decoration: none;
+                        padding: 5px 10px;
+                        color: white;
+                        background-color: #dc3545;
+                        border-radius: 5px;" onclick="deleteVCMasterEntry(this, {{ vc_master.id }})">Delete</a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -87,12 +91,26 @@
             <td><input type="text" placeholder="VC Number" id="newVCNumber"></td>
             <td><input type="text" placeholder="Model Description" id="newModelDescription"></td>
             <td class="action-buttons">
-                <a href="#" class="add" onclick="confirmAddVCMasterEntry(this)">Add</a>
+                <a href="#" class="add" style="    text-decoration: none;
+    padding: 5px 10px;
+    color: white;
+    background-color: #007bff;
+    border-radius: 5px;" onclick="confirmAddVCMasterEntry(this)">Add</a>
+                <a href="#" class="cancel" style="    text-decoration: none;
+    padding: 5px 10px;
+    color: white;
+    background-color: #dc3545;
+    border-radius: 5px;" onclick="cancelAddVCMasterEntry(this)">Cancel</a>
             </td>
         `;
         document.getElementById('vcMasterTableBody').appendChild(newRow);
     }
 
+
+function cancelAddVCMasterEntry(button) {
+    const row = button.parentNode.parentNode;
+    row.parentNode.removeChild(row);
+}
     function confirmAddVCMasterEntry(button) {
         var row = button.parentNode.parentNode;
         var vcNumber = row.querySelector("#newVCNumber").value.trim();

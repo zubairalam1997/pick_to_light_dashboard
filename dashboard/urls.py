@@ -28,6 +28,7 @@ urlpatterns=[
     path('delete_vc_master/<int:id>/', views.delete_vc_master, name='delete_vc_master'),
      path('add_vc_master/', views.add_vc_master, name='add_vc_master'),
     path('add_trolley_esl/', views.add_trolley_esl, name='add_trolley_esl'),
+    path('delete_trolley_esl/', views.delete_trolley_esl, name='delete_trolley_esl'),
     path('model_matrix/', views.base_model_matrix, name='base_model_matrix'),
     path('add_esl_template/', views.add_esl_part_template, name='add_esl_part_template'),
     path('add_new_trolley/', views.add_new_trolley_template, name='add_new_trolley_template'),

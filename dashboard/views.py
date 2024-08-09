@@ -23,7 +23,7 @@ import os
 # Initialize an in-memory queue
 pending_data_queue = defaultdict(list)
 
-
+url1 = 'http://192.168.1.100/wms/associate/updateScreen'
 
 # Assuming your trolley model is `Trolley`
 
@@ -203,7 +203,7 @@ def get_Payload_Data(request):
                 if data_list and qr_data :
                     if not WorkTable.objects.exists():
                         # No entries in WorkTable, post data directly
-                        response = requests.post('http://192.168.1.100/wms/associate/updateScreen', json=data_list)
+                        response = requests.post(url1, json=data_list)
                         response.raise_for_status()
                         if response.ok:
                             messages.success(request, 'Plan set to Kitting in Process.')
@@ -237,7 +237,7 @@ def get_Payload_Data(request):
                                         "VC": asn_schedule_created.vc_no, "ASN": asn_schedule_created.asn_no,
                                         "ledrgb": vc_color, "ledstate": "0", "outtime": "0"}]
 
-                                    response = requests.post('http://192.168.1.100/wms/associate/updateScreen', json=trolley_payload)
+                                    response = requests.post(url1, json=trolley_payload)
                                     response.raise_for_status()
                                     print("initial trolley payload" ,trolley_payload )
                                 else:
@@ -356,7 +356,7 @@ def get_Payload_Data(request):
                                                     "ledrgb": vc_color, "ledstate": "0", "outtime": "0"
                                                 }]
 
-                                                response = requests.post('http://192.168.1.100/wms/associate/updateScreen', json=trolley_payload)
+                                                response = requests.post(url1, json=trolley_payload)
                                                 response.raise_for_status()
                                                 print("initial trolley payload", trolley_payload)
                                                 return JsonResponse({'error': 'if all items lie in pending_data_queue, trolley posted successfully'})
@@ -367,7 +367,7 @@ def get_Payload_Data(request):
 
                             # Check if there are any completed items to process
                         if completed_items:
-                                response = requests.post('http://192.168.1.100/wms/associate/updateScreen', json=completed_items)
+                                response = requests.post(url1, json=completed_items)
                                 response.raise_for_status()
                                 # completed_items.clear()
                                 posted_vc = vc_number
@@ -401,7 +401,7 @@ def get_Payload_Data(request):
                                             "VC": asn_schedule_created.vc_no, "ASN": asn_schedule_created.asn_no,
                                             "ledrgb": vc_color, "ledstate": "0", "outtime": "0"}]
 
-                                        response = requests.post('http://192.168.1.100/wms/associate/updateScreen', json=trolley_payload)
+                                        response = requests.post(url1, json=trolley_payload)
                                         response.raise_for_status()
                                         print("initial trolley payload" ,trolley_payload )
                                     else:
@@ -521,7 +521,7 @@ def enter_key(request):
         if mac_address in pending_data_queue:
             if pending_data_queue[mac_address]:
                 esl_payload = [pending_data_queue[mac_address].pop(0)]
-                response = requests.post('http://192.168.1.100/wms/associate/updateScreen', json=esl_payload)
+                response = requests.post(url1, json=esl_payload)
                 if response.status_code == 200:
                     print(f'Data posted successfully for MAC address: {mac_address}')
                 else:
@@ -574,7 +574,7 @@ def enter_key(request):
                 if trolley.trolley_picking_status == 'completed':
 
 
-                    response = requests.post('http://192.168.1.100/wms/associate/updateScreen', json=trolley_payload)
+                    response = requests.post(url1, json=trolley_payload)
                     response.raise_for_status()
                     print(f'Trolley data updated successfully, Response: {response.text}',trolley_payload)
                     trolley.asn_num= None
@@ -731,7 +731,8 @@ def add_esl_part_template(request):
     return render(request, 'model_matrix/add_esl.html')   
 
 def add_new_trolley_template(request):
-    return render(request, 'model_matrix/add_new_trolley.html')  
+    all_trolley_tags = trolley_data.objects.all()
+    return render(request, 'model_matrix/add_new_trolley.html' , {'all_trolley_tags':all_trolley_tags})  
 def vc_model_mapping_template(request):
     vc_masters = VcMaster.objects.all()
     return render(request, 'model_matrix/vc_model_mapping.html' ,{'vc_masters':vc_masters}) 
@@ -802,12 +803,15 @@ def update_vc(request):
 
             # Show success message and redirect
             messages.success(request, 'VC entries updated successfully.')
-            return JsonResponse({'status': 'success', 'message': 'VC entries updated successfully.'})
+            return redirect('Part_VC_Map_Data')   
+            #return JsonResponse({'status': 'success', 'message': 'VC entries updated successfully.'})
+            
 
         except Exception as e:
             # Handle exceptions and show error message
             messages.error(request, f'Error updating VC entries: {str(e)}')
-            return JsonResponse({'status': 'error', 'message': f'Error updating VC entries: {str(e)}'})
+            return redirect('Part_VC_Map_Data')
+           # return JsonResponse({'status': 'error', 'message': f'Error updating VC entries: {str(e)}'})
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'})
 def edit_vc(request, id):
@@ -852,6 +856,11 @@ def add_esl_part(request):
 
             if not part_no or not part_desc or not quantity:
                 return JsonResponse({'success': False, 'message': 'All fields are required.'})
+            
+            if  EslPart.objects.filter(partno=part_no).exists() or \
+               EslPart.objects.filter(tagid=tag_mac).exists() or \
+               EslPart.objects.filter(part_desc=part_desc).exists():
+                return JsonResponse({'success': False, 'message': 'an entry already exist with the same parameter.'})
 
             EslPart.objects.create(
                    # Adjust as needed
@@ -872,32 +881,53 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from openpyxl import load_workbook
 
+import pandas as pd
 @csrf_exempt
 def upload_esl_excel(request):
     if request.method == 'POST' and request.FILES.get('excel_file'):
         excel_file = request.FILES['excel_file']
+
+        # Read the Excel file
         try:
-            wb = load_workbook(filename=excel_file, data_only=True)
-            sheet = wb.active
-            for row in sheet.iter_rows(min_row=2, values_only=True):  # Assuming the first row is the header
-                partno = row[0]
-                part_desc = row[1]
-                tagid = row[2]
-                quantity = row[3]
-                
-                if partno and part_desc and tagid and quantity is not None:  # Validate values
-                    EslPart.objects.update_or_create(
-                        partno=partno,
-                        defaults={
-                            'part_desc': part_desc,
-                            'tagid': tagid,
-                            'quantity': quantity
-                        }
-                    )
-            return JsonResponse({'success': True, 'message': 'ESL Excel uploaded and data updated successfully.'})
+            df = pd.read_excel(excel_file)
         except Exception as e:
-            return JsonResponse({'success': False, 'message': f'Error processing Excel file: {e}'})
-    return JsonResponse({'success': False, 'message': 'No file uploaded or invalid request method.'})
+            return JsonResponse({'success': False, 'message': f'Error reading Excel file: {str(e)}'})
+
+        required_columns = ['part_no', 'tagId', 'part_desc', 'quantity']
+        if not all(column in df.columns for column in required_columns):
+            return JsonResponse({'success': False, 'message': 'Excel file must contain part_no, tagId, part_desc, and quantity columns'})
+
+        skipped_entries = []
+        for index, row in df.iterrows():
+            part_no = row['part_no']
+            tag_id = row['tagId']
+            part_desc = row['part_desc']
+            quantity = row['quantity']
+
+            # Check if any of the fields (except quantity) match in the database
+            if  EslPart.objects.filter(partno=part_no).exists() or \
+               EslPart.objects.filter(tagid=tag_id).exists() or \
+               EslPart.objects.filter(part_desc=part_desc).exists():
+                skipped_entries.append(row.to_dict())
+                print("this field already exist")
+                continue
+
+            # Add the ESL part to the database
+            EslPart.objects.create(
+                partno=part_no,
+                tagid=tag_id,
+                part_desc=part_desc,
+                quantity=quantity
+            )
+
+        if skipped_entries:
+            message = f'Some entries were not added because they already exist in the database: {skipped_entries}'
+        else:
+            message = 'All entries were added successfully.'
+
+        return JsonResponse({'success': True, 'message': message})
+
+    return JsonResponse({'success': False, 'message': 'Invalid request method or no file uploaded'})
 
 
 @csrf_exempt
@@ -1039,6 +1069,23 @@ def add_trolley_esl(request):
         except Exception as e:
             return JsonResponse({'success': False, 'message': f'Error adding Trolley ESL: {e}'})
     return JsonResponse({'success': False, 'message': 'Invalid request method.'})
+
+from django.shortcuts import get_object_or_404
+@csrf_exempt
+def delete_trolley_esl(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            trolley_id = data.get('id')
+            trolley = get_object_or_404(trolley_data, id=trolley_id)
+            trolley.delete()
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request'})
+
+
 
 def base_model_matrix(request):
     return render(request ,"model_matrix/base_model_matrix.html") 
