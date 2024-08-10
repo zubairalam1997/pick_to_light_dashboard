@@ -24,6 +24,12 @@ import os
 pending_data_queue = defaultdict(list)
 
 url1 = 'http://192.168.1.100/wms/associate/updateScreen'
+styleMap_dict = {
+    "esl_styleid":50,
+    "esl_maptype":79,
+    "trolley_styleid":54,
+    "trolley_maptype":135,
+}
 
 # Assuming your trolley model is `Trolley`
 
@@ -165,6 +171,7 @@ def get_Payload_Data(request):
 
         try:
             if trolley_data.objects.filter(trolley_picking_status="pending").count() >= 7:
+                messages.warning(request , 'This trolley is already engaged!')
                 return JsonResponse({'error': 'All trolleys are currently engaged'}, status=400)
             matching_trolley = trolley_data.objects.filter(trolley_code=qr_data).first()
 
@@ -193,9 +200,9 @@ def get_Payload_Data(request):
                             "ledstate": "0",
                             "ledrgb": vc_color,
                             "outtime": "0",
-                            "styleid": "50",
-                            "qrcode": "2001",# change this with matching trolley
-                            "mappingtype": "79"
+                            "styleid": styleMap_dict['esl_styleid'],
+                            "qrcode": qr_data,# change this with matching trolley
+                            "mappingtype": styleMap_dict['esl_maptype']
                         })
                     except EslPart.DoesNotExist:
                         pass
@@ -232,7 +239,7 @@ def get_Payload_Data(request):
                                     matching_trolley.color = vc_color
                                     matching_trolley.save()
                                     trolley_payload = [{
-                                        "mac": trolley_mac, "mappingtype": 135, "styleid": 54, "qrcode": asn_schedule_created.trqr,
+                                        "mac": trolley_mac, "mappingtype":styleMap_dict['trolley_maptype'], "styleid": styleMap_dict['trolley_styleid'], "qrcode": asn_schedule_created.trqr,
                                         "Status": "PENDING", "MODEL": asn_schedule_created.model,
                                         "VC": asn_schedule_created.vc_no, "ASN": asn_schedule_created.asn_no,
                                         "ledrgb": vc_color, "ledstate": "0", "outtime": "0"}]
@@ -241,6 +248,7 @@ def get_Payload_Data(request):
                                     response.raise_for_status()
                                     print("initial trolley payload" ,trolley_payload )
                                 else:
+                                    messages.error(request , 'No matching trolley found')
                                     return JsonResponse({'error': 'No matching trolley found'}, status=404)
                             else:
                                 return JsonResponse({'error': 'ASN Schedule not created'}, status=500)
@@ -260,6 +268,7 @@ def get_Payload_Data(request):
 
                             return JsonResponse({'success': 'Data posted successfully'})
                         else:
+                            messages.error(request , 'Failed to post data')
                             return JsonResponse({'error': 'Failed to post data'}, status=500)
                     else:
                         pending_items = []
@@ -350,7 +359,7 @@ def get_Payload_Data(request):
                                                 matching_trolley.color = vc_color
                                                 matching_trolley.save()
                                                 trolley_payload = [{
-                                                    "mac": trolley_mac, "mappingtype": 135, "styleid": 54, "qrcode": asn_schedule_created.trqr,
+                                                    "mac": trolley_mac, "mappingtype": styleMap_dict['trolley_maptype'], "styleid": styleMap_dict['trolley_styleid'], "qrcode": asn_schedule_created.trqr,
                                                     "Status": "Pending..", "MODEL": asn_schedule_created.model,
                                                     "VC": asn_schedule_created.vc_no, "ASN": asn_schedule_created.asn_no,
                                                     "ledrgb": vc_color, "ledstate": "0", "outtime": "0"
@@ -396,7 +405,7 @@ def get_Payload_Data(request):
                                         matching_trolley.color = vc_color
                                         matching_trolley.save()
                                         trolley_payload = [{
-                                            "mac": trolley_mac, "mappingtype": 135, "styleid": 54, "qrcode": asn_schedule_created.trqr,
+                                            "mac": trolley_mac, "mappingtype": styleMap_dict['trolley_maptype'], "styleid": styleMap_dict['trolley_styleid'], "qrcode": asn_schedule_created.trqr,
                                             "Status": "Pending..", "MODEL": asn_schedule_created.model,
                                             "VC": asn_schedule_created.vc_no, "ASN": asn_schedule_created.asn_no,
                                             "ledrgb": vc_color, "ledstate": "0", "outtime": "0"}]
@@ -561,8 +570,8 @@ def enter_key(request):
                 trolley_payload = [{
                     "mac": trolley.mac,
                     "Status": trolley.trolley_picking_status,
-                    "mappingtype": 135,
-                    "styleid": 54,
+                    "mappingtype": styleMap_dict['trolley_maptype'],
+                    "styleid": styleMap_dict['trolley_styleid'],
                     "qrcode": asn_schedule.trqr,
                     "MODEL": asn_schedule.model,
                     "VC": asn_schedule.vc_no,
@@ -647,8 +656,8 @@ def kitting_config(request):
                 # Form the payload and post it
                 trolley_payload = [{
                     "mac": trolley.mac,
-                    "mappingtype": 135,
-                    "styleid": 54,
+                    "mappingtype": styleMap_dict['trolley_maptype'],
+                    "styleid": styleMap_dict['trolley_styleid'],
                     "qrcode": asn_schedule.trqr,
                     "Status": "Completed",
                     "MODEL": asn_schedule.model,
@@ -660,7 +669,7 @@ def kitting_config(request):
                 }]
                 if trolley.trolley_picking_status == 'completed':
                     try:
-                        response = requests.post('http://192.168.1.100/wms/associate/updateScreen', json=trolley_payload)
+                        response = requests.post(url1, json=trolley_payload)
                         response.raise_for_status()
                         trolley.asn_num = None
                         trolley.save()
@@ -682,8 +691,8 @@ def kitting_config(request):
                 print('worktabletagid2',worktable_entry.tagid)
                 esl_payload = [{
                     "mac": worktable_entry.tagid,
-                    "mappingtype": 79,
-                    "styleid": 50,
+                    "mappingtype": styleMap_dict['esl_maptype'],
+                    "styleid": styleMap_dict['esl_styleid'],
                     "qrcode": worktable_entry.tagcode,
                     "Part No.": worktable_entry.partno,
                     "DESC": worktable_entry.partdesc+".",
@@ -696,14 +705,14 @@ def kitting_config(request):
                 
                 if worktable_entry.status== 'completed':
                     try:
-                        response = requests.post('http://192.168.1.100/wms/associate/updateScreen', json=esl_payload)
+                        response = requests.post(url1, json=esl_payload)
                         response.raise_for_status()
                         print(f'ESL data updated successfully for MAC {worktable_entry.tagid}, Response: {response.text}')
                     except requests.exceptions.RequestException as e:
                         print(f'Request to update ESL failed: {e}')
                         return JsonResponse({'message': 'Failed to update ESL data', 'error': str(e)}, status=500)
 
-            return JsonResponse({'message': 'ASN status and related data updated successfully'})
+            return JsonResponse({'message': f'ASN:{asn_number} status and related data updated successfully'})
     except (WorkTable.DoesNotExist, AsnSchedule.DoesNotExist, trolley_data.DoesNotExist) as e:
         print(f'Exception occurred: {e}')
         return JsonResponse({'message': 'Error processing ASN', 'error': str(e)}, status=500)
