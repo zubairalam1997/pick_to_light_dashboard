@@ -18,7 +18,7 @@
     <h2>Upload Excel to Map Part number with VC</h2>
     <form id="uploadForm" method="post" action="{% url 'upload_excel' %}" enctype="multipart/form-data">
         {% csrf_token %}
-        <input type="file" name="excel_file" accept=".xlsx, .xls">
+        <input type="file" id="excelInput" name="excel_file" accept=".xlsx, .xls">
         <button type="button" class="upload-excel-btn" onclick="uploadFile()">Click to Upload Excel</button>
         <a href="{% static 'excel_files/sample.xlsx' %}" download>
         <button class="sample-exl-btn" type="button">Download Sample .XLSX</button>
@@ -177,7 +177,7 @@
         function uploadFile() {
             var formData = new FormData(document.getElementById('uploadForm'));
             var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-            var messageDiv = document.getElementById('message');
+            
 
             fetch('{% url "upload_excel" %}', {
                 method: 'POST',
@@ -189,10 +189,11 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    messageDiv.innerHTML = `<div style="color: green;">${data.message}</div>`;
+                    alert('File uploaded successfully.');
                 } else {
-                    messageDiv.innerHTML = `<div style="color: red;">${data.message}</div>`;
+                    alert('File upload failed:' + data.message);
                 }
+                document.getElementById('excelInput').value="";
             })
             .catch(error => {
                 messageDiv.innerHTML = `<div style="color: red;">An error occurred: ${error}</div>`;
