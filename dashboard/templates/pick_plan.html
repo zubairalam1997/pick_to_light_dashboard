@@ -13,18 +13,18 @@
                 <th class="table-header">VC Number</th>
                 <th class="table-header">ASN Number</th>
                 <th class="table-header">Model Description</th>
-                <th class="table-header">Plan Date</th>
+                <!-- <th class="table-header">Plan Date</th> -->
             </tr>
         </thead>
         <tbody id="data-body">
             {% for entry in page %}
             <tr class="table-row" onclick="openCameraContainer('{{ entry.id }}', '{{entry.asn_number}}','{{entry.model}}')">
                 <!-- <tr class="table-row" data-item-id="{{ entry.id }}" onclick="opencamera(z)" > -->
-                <td class="table-cell">{{ entry.schedule_time }}</td>
+                <td class="table-cell time">{{ entry.schedule_time }}</td>
                 <td class="table-cell vc-number ">{{ entry.vc_number }}</td>
-                <td class="table-cell">{{ entry.asn_number }}</td>
+                <td class="table-cell asn-num">{{ entry.asn_number }}</td>
                 <td class="table-cell">{{ entry.model }}</td>
-                <td class="table-cell">{{ entry.plan_date }}</td>
+                <!-- <td class="table-cell date">{{ entry.plan_date }}</td> -->
             </tr>
             {% empty %}
     <p>No data available.</p>
@@ -81,11 +81,29 @@
             <button id="btn-cancel"  onclick="handleCancelButtonClick()" style="background-color: rgb(252, 10, 10); padding: 5px; border-radius: 5px; color: whitesmoke; border: 1px whitesmoke; transition: background-color 0.3s ease;" onmouseover="this.style.backgroundColor='lightred'" onmouseout="this.style.backgroundColor='rgb(252, 10, 10)'">Cancel</button>
         </div>
     </div>
+
+
+    <div id="loader" style="display: none;">
+        <div class="spinner"></div>
+        <p class="loader-text">Please wait, the request is processing...</p>
+    </div>
     
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+   
     <script src="{% static 'js/qr_scanner.js' %}"></script>
+    <script src="{% static 'js/jquery-3.7.1.js' %}"></script>
+    <script src="{% static 'js/jsQR.min.js' %}"></script>
+    
     <script>
+        // setInterval(function() { 
+        //     $.ajax({
+        //         url: '/esl_update/',  // URL to your Django view
+        //         type: 'GET',
+        //         dataType: 'json',
+        //         success: function() {
+        //             console.log("reloaded!");
+        //         },
+        //     });
+        // }, 2000);
         function fetchData() {
             $.ajax({
                 url: '/get_combined_data/',  // URL to your Django view
@@ -113,13 +131,19 @@
         document.querySelectorAll('.table-row').forEach(row => {
     row.addEventListener('click', function() {
         // Extract VC number from the clicked row
+        const time = row.querySelector('.time').innerText;
+        const date = '';
         const vcNumber = row.querySelector('.vc-number').innerText;
-        console.log('Clicked VC number:', vcNumber);
+        const asnNumber = row.querySelector('.asn-num').innerText;
+        console.log('Clicked ScheduleTime:', date, time);
 
         // Create a FormData object and append the VC number
         const formData = new FormData();
         
+        formData.append('date', date);
+        formData.append('time', time);
         formData.append('vc_number', vcNumber);
+        formData.append('asn_number', asnNumber);
 
         // Send a POST request to the backend
         fetch('/getPayloadData/', {
@@ -151,3 +175,5 @@
 </div>
 
 {% endblock %}
+
+
