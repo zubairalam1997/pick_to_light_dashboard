@@ -283,6 +283,40 @@ def post_data_to_server(url, list_of_data, vc_number, qr_data, vc_color):
     
     except Exception as e:
         return {'error': str(e)}
+    
+
+def delete_repeat_asn_data_helper(asn_number):
+    # This is a regular Python function, not a Django view
+    # It handles the deletion logic and returns the results
+    if not asn_number:
+        return {'status': 'error', 'message': 'ASN number not provided'}
+
+    try:
+        
+        repeated_asn = AsnSchedule.objects.filter(asn_no=asn_number)
+        if repeated_asn:
+
+            deleted_asnschedules =  AsnSchedule.objects.all().delete()
+            deleted_worktables  = WorkTable.objects.all().delete()
+        # Add logic to delete entries from vc_n_asn except the latest 999
+        # 1. Order by date/time to find the latest entries
+        latest_entries = vc_n_asn.objects.order_by('-schedule_date_time')[:999]
+        # 2. Get the IDs of these latest entries
+        latest_ids = [entry.id for entry in latest_entries]
+        # 3. Delete all entries whose IDs are NOT in the latest_ids list
+        vc_n_asn.objects.exclude(id__in=latest_ids).delete()
+
+        
+        return {
+            'status': 'success',
+            'worktable_deleted': deleted_worktables,
+            'asnschedule_deleted': deleted_asnschedules,
+            'message': f'Data for ASN {asn_number} deleted successfully.'
+        }
+    except Exception as e:
+        # Proper error handling for the deletion process
+        return {'status': 'error', 'message': f'Error deleting ASN data: {e}'}
+
 
 @csrf_exempt  # Disable CSRF protection for this view to allow unauthenticated access
 @transaction.atomic  # Make the entire function run in a single database transaction
@@ -312,15 +346,23 @@ def get_Payload_Data(request):
         qr_data = request.POST.get('qr_data')
         print(qr_data)  # Log QR data for debugging purposes
 
-        # If no QR data is provided, retrieve VC number and date/time values
-        if qr_data is None:
-            vc_number = request.POST.get('vc_number')  # Get VC number from request
-            d = request.POST.get('date')  # Get date from request
-            t = request.POST.get('time')  # Get time from request
-            print(d + t)  # Log the combined date and time
-            dt = datetime.strptime(t, "%c")  # Convert the time string to a datetime object
 
-            print('VCNUMBER ', vc_number, 'dt ', dt)  # Log VC number and datetime for debugging
+        if qr_data is None:
+            vc_number = request.POST.get('vc_number')
+            for_repeat_asn = request.POST.get('asn_number')
+            
+            d = request.POST.get('date')
+            t = request.POST.get('time')
+            print(d+t)
+            dt = datetime.strptime(t, "%c")
+
+            print('VCNUMBER', vc_number, 'dt', dt, 'asn', for_repeat_asn)
+            # Call the helper function and get its response
+            delete_result = delete_repeat_asn_data_helper(for_repeat_asn)
+            if delete_result['status'] == 'error':
+                return JsonResponse(delete_result, status=500)
+
+
 
         try:
             # Check if there are at least 7 trolleys already engaged
@@ -558,11 +600,13 @@ def kitting_in_process(request):
             any_pending=False,
         )
 
-        # Get the distinct ASN numbers from the filtered queryset
+               # Get the distinct ASN numbers from the filtered queryset
         completed_asn_values = [item['asn'] for item in filtered_work_table]
 
-        # Filter AsnSchedule objects based on the completed ASN numbers
-        kitting_in_process_data = AsnSchedule.objects.exclude(asn_no__in=completed_asn_values).distinct('asn_no')
+        # Show ASN schedules where all worktables are completed but selection_status is NOT completed
+        kitting_in_process_data = AsnSchedule.objects.filter(
+            asn_no__in=completed_asn_values
+        ).exclude(selection_status='completed').distinct('asn_no')
 
         return render(request, 'kitting_in_process.html', {'kitting_in_process_data': kitting_in_process_data})
 
@@ -728,13 +772,16 @@ def completed_kittings(request):
         completed_asn_values = [item['asn'] for item in filtered_work_table]
 
         # Filter AsnSchedule objects based on the completed ASN numbers
-        completed_picks = AsnSchedule.objects.filter(asn_no__in=completed_asn_values).distinct('asn_no')
+        completed_picks = AsnSchedule.objects.filter(asn_no__in=completed_asn_values,
+                                                     selection_status='completed').distinct('asn_no')
 
         return render(request, 'completed_kittings.html', {'completed_picks': completed_picks})
 
     except AsnSchedule.DoesNotExist:
         # Handle the case where no AsnSchedule objects are found
         return render(request, 'completed_kittings.html', {'completed_picks': None})
+
+
 
 # this function is for completing the kitting in process ,manually
 @require_POST
@@ -1252,41 +1299,41 @@ def callback_view(request):
 
 
 
-# from django.http import JsonResponse
-# from django.views.decorators.csrf import csrf_exempt
-# import requests
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import requests
 
-# url2 = "http://192.168.1.100/wms/associate/lightTagsLed"
-# url3 = 'http://192.168.1.100/wms/associate/updateScreen'
+url2 = "http://192.168.1.100/wms/associate/lightTagsLed"
+url3 = 'http://192.168.1.100/wms/associate/updateScreen'
 
-# @csrf_exempt  # Disable CSRF for testing purposes (enable CSRF protection in production)
-# def send_led_request(request):
-#     # Ensure only POST requests are processed
+@csrf_exempt  # Disable CSRF for testing purposes (enable CSRF protection in production)
+def send_led_request(request):
+    # Ensure only POST requests are processed
     
-#     # Define the data to send
-#     data_list = [
-#         {"mac":"92.94.88.81","mappingtype":682,"styleid":60,"Hello":"hhhello","ledrgb":"ff00","ledstate":"0","outtime":"0"},
+    # Define the data to send
+    data_list = [
+        {"mac":"92.94.88.81","mappingtype":682,"styleid":60,"Hello":"hhhello","ledrgb":"ff00","ledstate":"0","outtime":"0"},
            
-#     ]
+    ]
 
-#     try:
-#         # Send the POST request
-#         response = requests.post(url3, json=data_list)
-#         response.raise_for_status()  # Raise an exception for HTTP errors
-#         print(f"Request Method: {request.method}")  # Should print "POST"
+    try:
+        # Send the POST request
+        response = requests.post(url3, json=data_list)
+        response.raise_for_status()  # Raise an exception for HTTP errors
+        print(f"Request Method: {request.method}")  # Should print "POST"
 
-#         return JsonResponse({
-#             "status": "success",
-#             "message": "Request sent successfully",
-#             "response": response.json()  # Include the response from the external API
-#         }, status=200)
+        return JsonResponse({
+            "status": "success",
+            "message": "Request sent successfully",
+            "response": response.json()  # Include the response from the external API
+        }, status=200)
     
-#     except requests.exceptions.RequestException as e:
-#         # Handle any errors that occur during the request
-#         return JsonResponse({
-#             "status": "error",
-#             "message": str(e)
-#         }, status=400)
+    except requests.exceptions.RequestException as e:
+        # Handle any errors that occur during the request
+        return JsonResponse({
+            "status": "error",
+            "message": str(e)
+        }, status=400)
 # Call function to send request
 #send_led_request()
 
