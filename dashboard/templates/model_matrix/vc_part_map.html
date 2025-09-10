@@ -21,8 +21,9 @@
         <input type="file" id="excelInput" name="excel_file" accept=".xlsx, .xls">
         <button type="button" class="upload-excel-btn" onclick="uploadFile()">Click to Upload Excel</button>
         <a href="{% static 'excel_files/sample.xlsx' %}" download>
-        <button class="sample-exl-btn" type="button">Download Sample .XLSX</button>
-    </a>
+        <button class="sample-exl-btn" type="button">Download Sample .XLSX</button></a>
+        <!-- Add this where you want the download button -->
+<a href="{% url 'export_vcdatabase_excel' %}" class="btn btn-success"> <button class="sample-exl-btn" type="button">Download VcDatabase Excel</button></a>
     </form>
     <h3 class="h3-heading">OR</h3>
     <h2>Click Edit to map part number with VC</h2>
@@ -168,38 +169,42 @@
                 });
             }
         }
+
+        
         function openVCMasterModal() {
             vcMasterModal.style.display = "block";
         }
         function closeVCMasterModal() {
             vcMasterModal.style.display = "none";
         }
+
         function uploadFile() {
-            var formData = new FormData(document.getElementById('uploadForm'));
-            var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-            
-
-            fetch('{% url "upload_excel" %}', {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': csrfToken
-                },
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('File uploaded successfully.');
-                } else {
-                    alert('File upload failed:' + data.message);
-                }
-                document.getElementById('excelInput').value="";
-            })
-            .catch(error => {
-                messageDiv.innerHTML = `<div style="color: red;">An error occurred: ${error}</div>`;
-            });
+    var formData = new FormData(document.getElementById('uploadForm'));
+    var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    fetch('{% url "upload_excel" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('File uploaded successfully.');
+        } else {
+            alert('File upload failed: ' + data.message);
         }
-
+        // Clear the file input after the upload is complete
+        document.getElementById('excelInput').value = "";
+    })
+    .catch(error => {
+        alert('An error occurred: ' + error);
+        // Clear the file input in case of an error as well
+        document.getElementById('excelInput').value = "";
+    });
+}
     </script>
 </body>
 </html>
