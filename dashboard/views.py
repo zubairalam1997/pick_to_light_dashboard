@@ -1252,41 +1252,41 @@ def callback_view(request):
 
 
 
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-import requests
+# from django.http import JsonResponse
+# from django.views.decorators.csrf import csrf_exempt
+# import requests
 
-url2 = "http://192.168.1.100/wms/associate/lightTagsLed"
-url3 = 'http://192.168.1.100/wms/associate/updateScreen'
+# url2 = "http://192.168.1.100/wms/associate/lightTagsLed"
+# url3 = 'http://192.168.1.100/wms/associate/updateScreen'
 
-@csrf_exempt  # Disable CSRF for testing purposes (enable CSRF protection in production)
-def send_led_request(request):
-    # Ensure only POST requests are processed
+# @csrf_exempt  # Disable CSRF for testing purposes (enable CSRF protection in production)
+# def send_led_request(request):
+#     # Ensure only POST requests are processed
     
-    # Define the data to send
-    data_list = [
-        {"mac":"92.94.88.81","mappingtype":682,"styleid":60,"Hello":"hhhello","ledrgb":"ff00","ledstate":"0","outtime":"0"},
+#     # Define the data to send
+#     data_list = [
+#         {"mac":"92.94.88.81","mappingtype":682,"styleid":60,"Hello":"hhhello","ledrgb":"ff00","ledstate":"0","outtime":"0"},
            
-    ]
+#     ]
 
-    try:
-        # Send the POST request
-        response = requests.post(url3, json=data_list)
-        response.raise_for_status()  # Raise an exception for HTTP errors
-        print(f"Request Method: {request.method}")  # Should print "POST"
+#     try:
+#         # Send the POST request
+#         response = requests.post(url3, json=data_list)
+#         response.raise_for_status()  # Raise an exception for HTTP errors
+#         print(f"Request Method: {request.method}")  # Should print "POST"
 
-        return JsonResponse({
-            "status": "success",
-            "message": "Request sent successfully",
-            "response": response.json()  # Include the response from the external API
-        }, status=200)
+#         return JsonResponse({
+#             "status": "success",
+#             "message": "Request sent successfully",
+#             "response": response.json()  # Include the response from the external API
+#         }, status=200)
     
-    except requests.exceptions.RequestException as e:
-        # Handle any errors that occur during the request
-        return JsonResponse({
-            "status": "error",
-            "message": str(e)
-        }, status=400)
+#     except requests.exceptions.RequestException as e:
+#         # Handle any errors that occur during the request
+#         return JsonResponse({
+#             "status": "error",
+#             "message": str(e)
+#         }, status=400)
 # Call function to send request
 #send_led_request()
 
