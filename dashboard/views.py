@@ -161,6 +161,19 @@ def picking_plan(request):
 @csrf_exempt
 @transaction.atomic
 def get_Payload_Data(request):
+       """
+   Functionality:
+    This function handles a POST request to process QR data or VC number (which represents some logistical information).
+    It checks for the availability of trolleys, validates data from the request, posts data to an external URL, and
+    updates the status of trolleys and work items. It also maintains a pending data queue for items that haven't been
+    processed yet and manages the creation of entries in several tables related to the workflow.
+
+    The function ensures that:
+    - Trolleys are available for use and not already engaged.
+    - Posts data to an external service if valid.
+    - Updates the WorkTable with the data processed.
+    - Handles pending and completed items separately, processing each accordingly.
+    """
     global posted_vc
     global vc_number
 
