@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+
 urlpatterns=[
     
     path('' , views.picking_plan, name='picking_plan'),
@@ -9,7 +10,7 @@ urlpatterns=[
     path('kitting_in_process/', views.kitting_in_process , name ='kitting_in_process'),
     path('open_modal/', views.open_modal, name='open_modal'),
     path('render_modal/', views.render_modal, name='render_modal'),
-    path('enter-key', views.enter_key, name='enter_key'),
+    path('enter-key/', views.enter_key, name='enter_key'),
     path('completed_kittings/', views.completed_kittings, name='completed_kittings'),
     path('complete_asn/', views.kitting_config, name='kitting_config'),
     path('asn_input/', views.asn_input, name='asn_input'),
@@ -34,4 +35,9 @@ urlpatterns=[
     path('add_new_trolley/', views.add_new_trolley_template, name='add_new_trolley_template'),
     path('vc_model_mapping/', views.vc_model_mapping_template, name='vc_model_mapping_template'),
     path('Part_VC_Map_Data/', views.Part_VC_Map_Data, name='Part_VC_Map_Data'),
+    path('esl_update/', views.esl_update, name='esl_update'),
+    path("callback/", views.callback_view, name="callback"),
+    # path("send_led/", views.send_led_request, name="send_led_request"),
+     path('export-vcdatabase/', views.export_vcdatabase_excel, name='export_vcdatabase_excel'),
+
 ]
